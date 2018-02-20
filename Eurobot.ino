@@ -1,3 +1,4 @@
+#include <PID_v1.h>
 #include <SoftwareSerial.h>
 #include "Arduino.h"
 #include <Servo.h>
@@ -54,9 +55,9 @@ const byte sPos[6] = {20, 150, 114, 73, 40, 0}; //defines servo drive positions 
 
     
 /* multi dimension array describing waypoints 
- *  execution order: distance and radius to waypoint -ve radius indicates ccw
+ *  execution order: distance and radius to waypoint -ve radius indicates acw
  *                   once waypoint achieved notify (and M&M if 1) then turn theta
- *                   -ve indicates ccw before executing next waypoint. 
+ *                   -ve indicates acw before executing next waypoint. 
                                  wpID, distance, radius, theta, M&M
                                        (x10mm)   (x10mm) (x10deg) bool*/ 
 const int waypoints[13][5] ={
@@ -355,7 +356,7 @@ void target(int distance, int radius) {
 #if debug == 1
   DEBUG.println("Targeting...");
 #endif
-  bool ccw = 0;
+  bool acw = 0;
   int E1Tar;
   int E2Tar;
   if (radius == 0) {
