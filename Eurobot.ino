@@ -1,3 +1,4 @@
+#include <Wire.h>
 #include <PID_v1.h>
 #include <SoftwareSerial.h>
 #include "Arduino.h"
@@ -38,20 +39,16 @@
 };
 #define debug 0  //switch for Software Serial
 #define pi 3.1415926 //saves any errors typing
-
+SoftwareSerial MD25(10, 11); //Software Serial MD25 RX, TX
+#define _MD25
 #if debug == 1 // NOT THE SERIAL SWITCH DON'T CHANGE
-    SoftwareSerial MD25(10, 11); //Software Serial MD25 RX, TX
     #define DEBUG Serial
-    #define _MD25
-#else
-  #define MD25 Serial
-  #define _MD25
 #endif
 Servo Carouselle;
 const int track = 23500; //trackwidth of robot in mm x100
 const int wheel_dia = 9450; //wheel diameter of robot in mm x100
 const int wheel_base = 15000; //distance from axle to M&M dispenser in mm x100
-const byte sPos[6] = {20, 150, 114, 73, 40, 0}; //defines servo drive positions for M&Ms 
+//const byte sPos[6] = {20, 150, 114, 73, 40, 0}; //defines servo drive positions for M&Ms 
 
     
 /* multi dimension array describing waypoints 
@@ -444,7 +441,7 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  byte MandMstock = 5;
+  //byte MandMstock = 5;
   for(int i = 0; i < 13; i++){ // for loop to work through waypoints
     int wp[5];
    instruct(reset);
@@ -457,8 +454,8 @@ void loop() {
 #endif
     target(wp[1], wp[2]);
     if(wp[4] == 1){
-      MandMrelease(MandMstock);
-      MandMstock--;
+      //MandMrelease(MandMstock);
+     // MandMstock--;
     }
     if(wp[3] > 0){turn(wp[3]);}
 }
