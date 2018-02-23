@@ -37,6 +37,10 @@
   int indy[2];
   long both;
 };
+const int Kp = 2;
+const int Ki = 1;
+const int Kd = 5;
+PID Wheel1(&Encs.indy[0], &Ouput1, E1tar, Kp, Ki, Kd, DIRECT);
 #define debug 0  //switch for Software Serial
 #define pi 3.1415926 //saves any errors typing
 SoftwareSerial MD25(10, 11); //Software Serial MD25 RX, TX
