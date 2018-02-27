@@ -37,10 +37,12 @@
   int indy[2];
   long both;
 };
-const int Kp = 2;
-const int Ki = 1;
-const int Kd = 5;
-PID Wheel1(&Encs.indy[0], &Ouput1, E1tar, Kp, Ki, Kd, DIRECT);
+const uint8_t Kp = 2;
+const uint8_t Ki = 1;
+const uint8_t Kd = 5;
+double Input0, Input1, Output0, Output1, SP0, SP1;
+PID Wheel0(&Input0, &Ouput0, &SP0, Kp, Ki, Kd, DIRECT);
+PID Wheel1(&Input1, &Ouput1, &SP1, Kp, Ki, Kd, DIRECT);
 #define debug 0  //switch for Software Serial
 #define pi 3.1415926 //saves any errors typing
 SoftwareSerial MD25(10, 11); //Software Serial MD25 RX, TX
@@ -252,7 +254,7 @@ void turn(int theta){
     #endif 
     int E2tar = enc_target((int)distance*10);
     int E1tar = enc_target(-(int)distance*10);
-    
+    SP0 = E1tar; SP1 = E2tar;
     DriveTo(E1tar, E2tar);
     return;
 }
@@ -294,16 +296,11 @@ void DriveTo(int E1tar, int E2tar) {
   DEBUG.println(E2tar, DEC);
   #endif
   while (!happy) {
-    float E1prog; float E2prog; byte baseline = 0; bool e = 0;
+    byte baseline = 0; bool e = 0;
     d.both = instruct(getEs);
     E1cur = d.indy[0];
     E2cur = d.indy[1];
-    E1diff = E1tar-E1cur;
-    E2diff = E2tar-E2cur;
-    E1prog = E1diff/E1tar;
-    E2prog = E2diff/E2tar;
-    S1 = 20 * E1prog;
-    S2 = 20 * E2prog;
+   Input0 = E1cur; Input1 = E2 cur;
 #if debug == 1
   DEBUG.println("EDIFFS:");
   DEBUG.print(E1diff);
@@ -316,36 +313,20 @@ void DriveTo(int E1tar, int E2tar) {
       halt;
       break;
     }
-    else if (E1diff < 0) {
-      S1 -= baseline;
-    }
-    else {
-      S1 += baseline;
-    }
-    if (abs(E2diff)<10) {
-      happy = 1;
-      halt;
-      break;
-    }
-    else if (E2diff < 0) {
-      S2 -= baseline;
-    }
-    else {
-      S2 += baseline;
-    }
+    
     if(e){
-    instruct(setS1, S1);
-    instruct(setS2, S2);
+    instruct(setS1, Output0);
+    instruct(setS2, Output1);
     }
     else{
-      instruct(setS2, S2);
-      instruct(setS1, S1);
+    instruct(setS1, Output0);
+    instruct(setS2, Output1);
     }
     e = !e;
 #if debug == 1
     DEBUG.println("Speed Adjustment: S1, S2");
-    DEBUG.print(S1, DEC);
-    DEBUG.println(S2, DEC);
+    DEBUG.print(Output0, DEC);
+    DEBUG.println(Output1, DEC);
 #endif
   }
 #if debug ==1
@@ -398,18 +379,6 @@ void target(int distance, int radius) {
     notify();
   return;
 }
-
-void MandMrelease(byte remaining){
-  /*This Function drops M&Ms
-   * Author: Luka - lzd1u16@soton.ac.uk
-   */
-   Carouselle.write(sPos[remaining]);
-   #if debug == 1
-    DEBUG.print("M&M Deployed: ");
-    DEBUG.println(remaining, DEC);
-   #endif
-   return;
-  } //function prototype for releasing M&Ms
 
 
 void kmn(){bool a=0;} //function than never returns to provide stop
