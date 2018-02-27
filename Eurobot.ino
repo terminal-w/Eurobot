@@ -41,8 +41,8 @@ const uint8_t Kp = 2;
 const uint8_t Ki = 1;
 const uint8_t Kd = 5;
 double Input0, Input1, Output0, Output1, SP0, SP1;
-PID Wheel0(&Input0, &Ouput0, &SP0, Kp, Ki, Kd, DIRECT);
-PID Wheel1(&Input1, &Ouput1, &SP1, Kp, Ki, Kd, DIRECT);
+PID Wheel0(&Input0, &Output0, &SP0, Kp, Ki, Kd, DIRECT);
+PID Wheel1(&Input1, &Output1, &SP1, Kp, Ki, Kd, DIRECT);
 #define debug 0  //switch for Software Serial
 #define pi 3.1415926 //saves any errors typing
 SoftwareSerial MD25(10, 11); //Software Serial MD25 RX, TX
@@ -300,7 +300,7 @@ void DriveTo(int E1tar, int E2tar) {
     d.both = instruct(getEs);
     E1cur = d.indy[0];
     E2cur = d.indy[1];
-   Input0 = E1cur; Input1 = E2 cur;
+   Input0 = E1cur; Input1 = E2cur;
 #if debug == 1
   DEBUG.println("EDIFFS:");
   DEBUG.print(E1diff);
@@ -396,7 +396,7 @@ void setup() {
       MD25.begin(38400);
     #endif
     instruct(setMod, 1); // sets motors with 0 being stop and each independent of the other.
-    Carouselle.write(sPos[0]);
+    //Carouselle.write(sPos[0]);
     notify();
     bool go = 0;
     #if debug == 1
