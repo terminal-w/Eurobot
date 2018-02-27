@@ -5,21 +5,20 @@
 #include <Servo.h>
 
 /*
- * Title: Odometry Task
- * Client: Aero 2 - Group 17/Q{
- * Team Lead:       James Wilshaw
- * 2nd in Command:  Luka Zabotto-Devitt
- *                - Ho (Phoebus) Wong
- *                - Wen (William) Yu
- *                - Aaron Adekoya
+ * Title: Eurobot Code
+ * Client: Atalantis Robotics Co.{
+ * Team Lead:       Maria Sagno Navarra
+ * 2nd in Command:  James Wilshaw
+ *                - Rachel Gray
+ *                - Cameron Ward
+ *                - Fancisco
  *                }
+ *       Apdapted from Odometry Task Code         
  * Author: James Wilshaw -- jrw1n15@soton.ac.uk
- * Date: 2017-11-06
+ * Date: 2018-02-27
  * =============================================
  * Objectives:
  * Navigate route and carry out tasks at waypoints using only encoder data as input.
- * notify at all way points.
- * Dispense Chocolate at certain way points.
  * 
  * CODE STRUCTURE
  * -Instruct: Instruction sent to the MD25 and receives information to decode it
@@ -33,6 +32,7 @@
  * -kmn: stops the loop
  * -
  */
+ /*Definitions*/
  union Encs{
   int indy[2];
   long both;
@@ -50,7 +50,7 @@ SoftwareSerial MD25(10, 11); //Software Serial MD25 RX, TX
 #if debug == 1 // NOT THE SERIAL SWITCH DON'T CHANGE
     #define DEBUG Serial
 #endif
-Servo Carouselle;
+//Servo Carouselle;
 const int track = 23500; //trackwidth of robot in mm x100
 const int wheel_dia = 9450; //wheel diameter of robot in mm x100
 const int wheel_base = 15000; //distance from axle to M&M dispenser in mm x100
@@ -106,8 +106,69 @@ enum registers:byte
     enTimO  = 0x39
   };
 #define registers
+/*Function Prototypes*/
+long instruct(byte, char = 0);
+void halt();
+int enc_target(int);
+void turn(int);
+int sweep(int, int, bool = 0);
+void notify();
+void DriveTo(int, int);
+void target(int, int);
+void kmn(){bool a=0; while(!a){a=0;}} //function than never returns to provide stop
+/*Main Code*/
+void setup() {
+  // put your setup code here, to run once:
+  //Carouselle.attach(9);
+  pinMode(13, OUTPUT);
+  pinMode(4, INPUT);
+    #if debug == 1
+      MD25.begin(38400);
+      DEBUG.begin(115200);  
+    #else
+      MD25.begin(38400);
+    #endif
+    instruct(setMod, 1); // sets motors with 0 being stop and each independent of the other.
+    //Carouselle.write(sPos[0]);
+    notify();
+    bool go = 0;
+    #if debug == 1
+    DEBUG.print("Awaiting all clear @ ");
+    DEBUG.println((int)millis(), DEC);
+    #endif
+     while(!go){
+      go = !digitalRead(4);
+    }
+    #if debug == 1
+      DEBUG.print("Setup Complete @ ");
+      DEBUG.println((int)millis(), DEC);
+    #endif
+}
 
-long instruct(byte reg, char val = 0){
+void loop() {
+  // put your main code here, to run repeatedly:
+  //byte MandMstock = 5;
+  for(int i = 0; i < 13; i++){ // for loop to work through waypoints
+    int wp[5];
+   instruct(reset);
+    for(int j = 0; j < 5; j++){
+      wp[j] = waypoints[i][j]; // takes data about next waypoint "off the shelf"
+    }
+#if debug == 1
+      DEBUG.print("Next WP: ");
+      DEBUG.println(wp[0], DEC);
+#endif
+    target(wp[1], wp[2]);
+    if(wp[4] == 1){
+      //MandMrelease(MandMstock);
+     // MandMstock--;
+    }
+    if(wp[3] > 0){turn(wp[3]);}
+}
+  kmn();
+}
+/*Functions*/
+long instruct(byte reg, char val){
   if(reg == getPow){
     #if debug == 1
     DEBUG.println("Sorry this function doesn't support that register");
@@ -214,7 +275,6 @@ long instruct(byte reg, char val = 0){
   #endif
   return 0;
 }
-
 void halt(){
   //function to stop robot.
   instruct(setAcc, 10);
@@ -226,7 +286,6 @@ void halt(){
   #endif
   return;
 }
-
 int enc_target(int distance) {
   /* takes the required travel distance in mm x10 an converts it to an encoder target*/
  float den = pi*wheel_dia;
@@ -241,7 +300,6 @@ int enc_target(int distance) {
  #endif
  return out;
 }
-
 void turn(int theta){
     /* takes two arguments a target angle, theta (degrees x10), and a switch, spot,
     to determine whether the angle is to describe an arc or a spot turn.
@@ -258,8 +316,7 @@ void turn(int theta){
     DriveTo(E1tar, E2tar);
     return;
 }
-
-int sweep(int distance, int radius, bool in = 0){
+int sweep(int distance, int radius, bool in){
   /* code to allow robot to describe an arc
      returns the inner & outer arc lengths in mm x10*/
   int Ri = radius - track/20;
@@ -277,7 +334,6 @@ int sweep(int distance, int radius, bool in = 0){
   if(in){return Di;}
   else{return Do;}
 }
-
 void notify(){
   halt();
   tone(13, 4000, 500);
@@ -375,62 +431,8 @@ void target(int distance, int radius) {
 #endif
     }
   }
+  SP0 = E1Tar; SP1 = E2Tar;
   DriveTo(E1Tar, E2Tar);
     notify();
   return;
-}
-
-
-void kmn(){bool a=0;} //function than never returns to provide stop
-
-
-void setup() {
-  // put your setup code here, to run once:
-  Carouselle.attach(9);
-  pinMode(13, OUTPUT);
-  pinMode(4, INPUT);
-    #if debug == 1
-      MD25.begin(38400);
-      DEBUG.begin(115200);  
-    #else
-      MD25.begin(38400);
-    #endif
-    instruct(setMod, 1); // sets motors with 0 being stop and each independent of the other.
-    //Carouselle.write(sPos[0]);
-    notify();
-    bool go = 0;
-    #if debug == 1
-    DEBUG.print("Awaiting all clear @ ");
-    DEBUG.println((int)millis(), DEC);
-    #endif
-     while(!go){
-      go = !digitalRead(4);
-    }
-    #if debug == 1
-      DEBUG.print("Setup Complete @ ");
-      DEBUG.println((int)millis(), DEC);
-    #endif
-}
-
-void loop() {
-  // put your main code here, to run repeatedly:
-  //byte MandMstock = 5;
-  for(int i = 0; i < 13; i++){ // for loop to work through waypoints
-    int wp[5];
-   instruct(reset);
-    for(int j = 0; j < 5; j++){
-      wp[j] = waypoints[i][j]; // takes data about next waypoint "off the shelf"
-    }
-#if debug == 1
-      DEBUG.print("Next WP: ");
-      DEBUG.println(wp[0], DEC);
-#endif
-    target(wp[1], wp[2]);
-    if(wp[4] == 1){
-      //MandMrelease(MandMstock);
-     // MandMstock--;
-    }
-    if(wp[3] > 0){turn(wp[3]);}
-}
-  kmn();
 }
