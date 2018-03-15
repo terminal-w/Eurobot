@@ -46,7 +46,11 @@ double Input0, Input1, Output0, Output1, SP0, SP1;
 long t0;
 PID Wheel0(&Input0, &Output0, &SP0, Kp, Ki, Kd, DIRECT);
 PID Wheel1(&Input1, &Output1, &SP1, Kp, Ki, Kd, DIRECT);
+
+
 #define debug 1  //switch for Software Serial
+
+
 #define pi 3.1415926 //saves any errors typing
 SoftwareSerial MD25(10, 11); //Software Serial MD25 RX, TX
 #define _MD25
