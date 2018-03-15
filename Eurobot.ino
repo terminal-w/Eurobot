@@ -37,13 +37,13 @@
   int indy[2];
   long both;
 };
-const uint8_t Kp = 2;
-const uint8_t Ki = 1;
-const uint8_t Kd = 5;
+const double Kp = .01;
+const double Ki = 5;
+const double Kd = 7;
 double Input0, Input1, Output0, Output1, SP0, SP1;
 PID Wheel0(&Input0, &Output0, &SP0, Kp, Ki, Kd, DIRECT);
 PID Wheel1(&Input1, &Output1, &SP1, Kp, Ki, Kd, DIRECT);
-#define debug 0  //switch for Software Serial
+#define debug 1  //switch for Software Serial
 #define pi 3.1415926 //saves any errors typing
 SoftwareSerial MD25(10, 11); //Software Serial MD25 RX, TX
 #define _MD25
@@ -119,7 +119,9 @@ void kmn(){bool a=0; while(!a){a=0;}} //function than never returns to provide s
 /*Main Code*/
 void setup() {
   // put your setup code here, to run once:
-  //Carouselle.attach(9);
+  //Carouselle.attach(9)
+  Wheel0.SetMode(MANUAL);
+  Wheel1.SetMode(MANUAL);
   pinMode(13, OUTPUT);
   pinMode(4, INPUT);
     #if debug == 1
@@ -136,9 +138,9 @@ void setup() {
     DEBUG.print("Awaiting all clear @ ");
     DEBUG.println((int)millis(), DEC);
     #endif
-     while(!go){
+    /*while(!go){
       go = !digitalRead(4);
-    }
+    }*/
     #if debug == 1
       DEBUG.print("Setup Complete @ ");
       DEBUG.println((int)millis(), DEC);
@@ -351,12 +353,15 @@ void DriveTo(int E1tar, int E2tar) {
   DEBUG.print(E1tar, DEC);
   DEBUG.println(E2tar, DEC);
   #endif
+  Wheel0.SetMode(AUTOMATIC); Wheel1.SetMode(AUTOMATIC);
   while (!happy) {
     byte baseline = 0; bool e = 0;
     d.both = instruct(getEs);
     E1cur = d.indy[0];
     E2cur = d.indy[1];
    Input0 = E1cur; Input1 = E2cur;
+   Wheel0.Compute(); Wheel1.Compute();
+   E1diff = E1tar-E1cur; E2diff = E2tar-E2cur;
 #if debug == 1
   DEBUG.println("EDIFFS:");
   DEBUG.print(E1diff);
@@ -364,7 +369,8 @@ void DriveTo(int E1tar, int E2tar) {
    DEBUG.print(S1, DEC);
    DEBUG.println(S2, DEC);
    #endif
-    if(abs(E1diff)<10) {
+    if(abs(E1diff)<10||abs(E2diff)<10) {
+      Wheel0.SetMode(MANUAL); Wheel1.SetMode(MANUAL);
       happy = 1;
       halt;
       break;
