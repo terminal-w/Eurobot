@@ -300,6 +300,8 @@ void action(int no){
 }
 void halt(){
   //function to stop robot.
+  Wheel0.SetMode(MANUAL);
+  Wheel1.SetMode(MANUAL);
   instruct(setAcc, 10);
   instruct(setS1);
   instruct(setS2); 
@@ -326,6 +328,7 @@ void DriveTo(int E1tar, int E2tar) {
   DEBUG.print(E1tar, DEC);
   DEBUG.println(E2tar, DEC);
   #endif
+  SP0 = E1tar; SP1 = E2tar;
   Wheel0.SetMode(AUTOMATIC); Wheel1.SetMode(AUTOMATIC);
   while (!happy) {
     byte baseline = 0; bool e = 0;
@@ -344,7 +347,7 @@ void DriveTo(int E1tar, int E2tar) {
    #endif
     if(abs(E1diff)<50||abs(E2diff)<50) {
       happy = 1;
-      halt;
+      notify();
       break;
     }
     
@@ -458,8 +461,6 @@ void target(int distance, int radius) {
 #endif
     }
   }
-  SP0 = E1Tar; SP1 = E2Tar;
   DriveTo(E1Tar, E2Tar);
-    notify();
   return;
 }
