@@ -38,9 +38,9 @@
   int indy[2];
   long both;
 };
-const double Kp = .01;
-const double Ki = 5;
-const double Kd = 7;
+const double Kp = 1;
+const double Ki = 0;
+const double Kd = 0;
 const byte wps = 4;
 double Input0, Input1, Output0, Output1, SP0, SP1;
 long t0;
@@ -55,7 +55,7 @@ SoftwareSerial MD25(10, 11); //Software Serial MD25 RX, TX
 #endif
 //Servo Carouselle;
 const int track = 23500; //trackwidth of robot in mm x100
-const int wheel_dia = 9450; //wheel diameter of robot in mm x100
+const int wheel_dia = 7500; //wheel diameter of robot in mm x100
 const int wheel_base = 15000; //distance from axle to M&M dispenser in mm x100
 //const byte sPos[6] = {20, 150, 114, 73, 40, 0}; //defines servo drive positions for M&Ms 
 
@@ -165,6 +165,7 @@ void loop() {
 void timeup(){
   long te = millis() - t0;
   if(te > time_limit){kmn();}
+  return;
 }
 long instruct(byte reg, char val){
   if(reg == getPow){
