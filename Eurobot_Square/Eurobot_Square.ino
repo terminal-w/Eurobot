@@ -74,10 +74,10 @@ const int wheel_base = 15000; //distance from axle to M&M dispenser in mm x100
                                  wpID, distance, radius, theta, action
                                        (x10mm)   (x10mm) (x10deg) byte*/ 
 const int waypoints[wps][6] ={
-                                {0,   1000,     0,      900,     0, null},
-                                {1,   1000,     0,      900,     0, null},
-                                {2,   1000,     0,      900,     0, null},
-                                {3,   1000,     0,      900,     0, null},
+                                {0,   1000,     0,      900,     0, 1023},
+                                {1,   1000,     0,      900,     0, 1023},
+                                {2,   1000,     0,      900,     0, 1023},
+                                {3,   1000,     0,      900,     0, 1023},
                                 };
 /*
  * serial control register lookup table
@@ -164,7 +164,7 @@ void loop() {
     #if debug == 1
     DEBUG.println(wp[0], DEC);
     #endif
-    if(wp[5] != null){pLimit = wp[5];}
+    if(wp[5] != 1023){pLimit = wp[5];}
     else{pLimit = pDef;}
     target(wp[1], wp[2]);
     turn(wp[3]);
@@ -174,15 +174,19 @@ void loop() {
 }
 /*Functions*/
 bool prox(char dir, float lim){
-  int pin
+  const int arange = 15;
+  int pin;
+  float dist = 0;
   if(dir > 0){
     pin = A0;
   }
   else{pin = A1;}
-  float dist = analogRead(A0)/(512 * 2.54);
-  if(dist>lim){
-    return 0;
+  for(int i=0; i < arange; i++){
+    dist += analogRead(A0)/(2 * 2.54);
+    delay(5);
   }
+  dist /= arange;
+  if(dist>lim){return 0;}
   else{return 1;}
 }
 void timeup(){
@@ -362,7 +366,7 @@ void DriveTo(int E1tar, int E2tar) {
    Input0 = E1cur; Input1 = E2cur;
    Wheel0.Compute(); Wheel1.Compute();
    E1diff = E1tar-E1cur; E2diff = E2tar-E2cur;
-   bool obs = prox(E1diff, PLimit);
+   bool obs = prox(E1diff, pLimit);
    if(obs){
     Wheel0.SetMode(MANUAL); Wheel1.SetMode(MANUAL);
     instruct(setS1, 0); instruct(setS2, 0);
