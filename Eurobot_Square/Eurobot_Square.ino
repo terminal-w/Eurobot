@@ -44,6 +44,9 @@ const double Kd = 0;
 const byte wps = 4;
 double Input0, Input1, Output0, Output1, SP0, SP1;
 long t0;
+float pLimit;
+static float pDef = 5;
+ 
 PID Wheel0(&Input0, &Output0, &SP0, Kp, Ki, Kd, DIRECT);
 PID Wheel1(&Input1, &Output1, &SP1, Kp, Ki, Kd, DIRECT);
 
@@ -70,11 +73,11 @@ const int wheel_base = 15000; //distance from axle to M&M dispenser in mm x100
  *                   -ve indicates acw before executing next waypoint. 
                                  wpID, distance, radius, theta, action
                                        (x10mm)   (x10mm) (x10deg) byte*/ 
-const int waypoints[wps][5] ={
-                                {0,   1000,     0,      900,     0},
-                                {1,   1000,     0,      900,     0},
-                                {2,   1000,     0,      900,     0},
-                                {3,   1000,     0,      900,     0},
+const int waypoints[wps][6] ={
+                                {0,   1000,     0,      900,     0, null},
+                                {1,   1000,     0,      900,     0, null},
+                                {2,   1000,     0,      900,     0, null},
+                                {3,   1000,     0,      900,     0, null},
                                 };
 /*
  * serial control register lookup table
@@ -124,6 +127,8 @@ void setup(){
   Wheel1.SetMode(MANUAL);
   pinMode(13, OUTPUT);
   pinMode(4, INPUT);
+  pinMode(A0, INPUT);
+  pinMode(A1, INPUT);
     #if debug == 1
       MD25.begin(38400);
       DEBUG.begin(115200);  
@@ -151,14 +156,16 @@ void setup(){
 void loop() {
   // put your main code here, to run repeatedly:
   //byte MandMstock = 5;
-  int wp[5];
+  int wp[6];
   for(int i = 0; i < wps; i++){ // for loop to work through waypoints
-    for(int j=0; j<5; i++){
+    for(int j=0; j<6; i++){
       wp[j] = waypoints[i][j];
     }
     #if debug == 1
     DEBUG.println(wp[0], DEC);
     #endif
+    if(wp[5] != null){pLimit = wp[5];}
+    else{pLimit = pDef;}
     target(wp[1], wp[2]);
     turn(wp[3]);
     action(wp[4]);
@@ -166,6 +173,18 @@ void loop() {
   kmn();
 }
 /*Functions*/
+bool prox(char dir, float lim){
+  int pin
+  if(dir > 0){
+    pin = A0;
+  }
+  else{pin = A1;}
+  float dist = analogRead(A0)/(512 * 2.54);
+  if(dist>lim){
+    return 0;
+  }
+  else{return 1;}
+}
 void timeup(){
   long te = millis() - t0;
   if(te > time_limit){kmn();}
@@ -335,6 +354,7 @@ void DriveTo(int E1tar, int E2tar) {
   SP0 = E1tar; SP1 = E2tar;
   Wheel0.SetMode(AUTOMATIC); Wheel1.SetMode(AUTOMATIC);
   while (!happy) {
+    timeup();
     byte baseline = 0; bool e = 0;
     d.both = instruct(getEs);
     E1cur = d.indy[0];
@@ -342,6 +362,11 @@ void DriveTo(int E1tar, int E2tar) {
    Input0 = E1cur; Input1 = E2cur;
    Wheel0.Compute(); Wheel1.Compute();
    E1diff = E1tar-E1cur; E2diff = E2tar-E2cur;
+   bool obs = prox(E1diff, PLimit);
+   if(obs){
+    Wheel0.SetMode(MANUAL); Wheel1.SetMode(MANUAL);
+    instruct(setS1, 0); instruct(setS2, 0);
+   }
 #if debug == 1
   DEBUG.println("EDIFFS:");
   DEBUG.print(E1diff);
@@ -354,7 +379,7 @@ void DriveTo(int E1tar, int E2tar) {
       notify();
       break;
     }
-    
+   if(!obs){ 
     if(e){
     instruct(setS1, Output0);
     instruct(setS2, Output1);
@@ -369,6 +394,12 @@ void DriveTo(int E1tar, int E2tar) {
     DEBUG.print(Output0, DEC);
     DEBUG.println(Output1, DEC);
 #endif
+   }
+   else{
+#if debug == 1
+    DEBUG.println("OBSTRUCTION!");
+#endif
+   }
   }
 #if debug ==1
   DEBUG.println("Because I'm Happy");
