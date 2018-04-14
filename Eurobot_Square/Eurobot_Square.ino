@@ -38,9 +38,9 @@
   int indy[2];
   long both;
 };
-const double Kp = 1;
+const double Kp = 0.117;
 const double Ki = 0;
-const double Kd = 0;
+const double Kd = 0.1;
 const byte wps = 4;
 double Input0, Input1, Output0, Output1, SP0, SP1;
 long t0;
@@ -61,7 +61,7 @@ SoftwareSerial MD25(10, 11); //Software Serial MD25 RX, TX
     #define DEBUG Serial
 #endif
 //Servo Carouselle;
-const int track = 23500; //trackwidth of robot in mm x100
+const int track = 24100; //trackwidth of robot in mm x100
 const int wheel_dia = 7500; //wheel diameter of robot in mm x100
 const int wheel_base = 15000; //distance from axle to M&M dispenser in mm x100
 //const byte sPos[6] = {20, 150, 114, 73, 40, 0}; //defines servo drive positions for M&Ms 
@@ -108,7 +108,12 @@ enum registers:byte
   };
 #define registers
 //Function Prototypes
-void kmn(){bool a=0; while(!a){a=0;}} //function than never returns to provide stop
+void kmn(){
+  #if debug == 1
+  DEBUG.println("KILL ME NOW!");
+  #endif
+  bool a=0; while(!a){a=0;}
+  } //function than never returns to provide stop
 void timeup();
 long instruct(byte, char = 0);
 void action(int);
@@ -116,7 +121,7 @@ void halt();
 void notify();
 void DriveTo(int, int);
 int enc_target(int);
-void turn(int);
+void turn(float);
 int sweep(int, int, bool = 0);
 void target(int, int);
 /*Main Code*/
@@ -134,6 +139,9 @@ void setup(){
     #if debug == 1
       MD25.begin(38400);
       DEBUG.begin(115200);  
+      DEBUG.print("Kp = "); DEBUG.println(Kp, DEC);
+      DEBUG.print("Ki = "); DEBUG.println(Ki, DEC);
+      DEBUG.print("Kd = "); DEBUG.println(Kd, DEC);
     #else
       MD25.begin(38400);
     #endif
@@ -176,6 +184,10 @@ void loop() {
     if(wp[5] != 1023){pLimit = wp[5];}
     else{pLimit = pDef;}
     target(wp[1], wp[2]);
+    #if debug == 1
+    DEBUG.print("Turning: ");
+    DEBUG.println(wp[3], DEC);
+    #endif
     turn(wp[3]);
     action(wp[4]);
   }
@@ -361,7 +373,7 @@ void DriveTo(int E1tar, int E2tar) {
   bool happy = 0; int E1cur; int E2cur; char S1; char S2; float E1diff; float E2diff; Encs d;
  #if debug ==1
   DEBUG.println("Etars:");
-  DEBUG.print(E1tar, DEC);
+  DEBUG.print(E1tar, DEC); DEBUG.print(", ");
   DEBUG.println(E2tar, DEC);
   #endif
   SP0 = E1tar; SP1 = E2tar;
@@ -387,7 +399,7 @@ void DriveTo(int E1tar, int E2tar) {
    DEBUG.print(S1, DEC);
    DEBUG.println(S2, DEC);
    #endif
-    if(abs(E1diff)<50||abs(E2diff)<50) {
+    if(abs(E1diff)<10||abs(E2diff)<10) {
       happy = 1;
       notify();
       break;
@@ -434,18 +446,19 @@ int enc_target(int distance) {
  #endif
  return out;
 }
-void turn(int theta){
-    /* takes two arguments a target angle, theta (degrees x10), and a switch, spot,
-    to determine whether the angle is to describe an arc or a spot turn.
+void turn(float theta){
+    /* takes two arguments a target angle, theta (degrees x10), 
     executes turn */
     float distance; //distance to be traveled per in mm
-    distance = (theta/3600)*pi*(track);
+    distance = theta/36000;
+    distance *= pi;
+    distance *= track;
     #if debug == 1
       DEBUG.print("turn: ");
       DEBUG.println(distance);
     #endif 
-    int E2tar = enc_target((int)distance*10);
-    int E1tar = enc_target(-(int)distance*10);
+    int E2tar = enc_target((int)distance);
+    int E1tar = enc_target(-(int)distance);
     SP0 = E1tar; SP1 = E2tar;
     DriveTo(E1tar, E2tar);
     return;
