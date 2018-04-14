@@ -1,4 +1,3 @@
-#include <Wire.h>
 #include <PID_v1.h>
 #include <SoftwareSerial.h>
 #include "Arduino.h"

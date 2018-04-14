@@ -1,7 +1,7 @@
+#include "Arduino.h"
 #include <Wire.h>
 #include <PID_v1.h>
 #include <SoftwareSerial.h>
-#include "Arduino.h"
 #include <Servo.h>
 
 /*
@@ -125,6 +125,8 @@ void setup(){
   //Carouselle.attach(9)
   Wheel0.SetMode(MANUAL);
   Wheel1.SetMode(MANUAL);
+  Wheel0.SetOutputLimits(-128,127);
+  Wheel1.SetOutputLimits(-128,127);
   pinMode(13, OUTPUT);
   pinMode(4, INPUT);
   pinMode(A0, INPUT);
@@ -156,9 +158,16 @@ void setup(){
 void loop() {
   // put your main code here, to run repeatedly:
   //byte MandMstock = 5;
+  #if debug == 1
+  DEBUG.println("LOOP");
+  #endif
   int wp[6];
   for(int i = 0; i < wps; i++){ // for loop to work through waypoints
-    for(int j=0; j<6; i++){
+    for(int j=0; j<6; j++){
+      #if debug == 1
+      DEBUG.print("j = ");
+      DEBUG.println(j, DEC);
+      #endif
       wp[j] = waypoints[i][j];
     }
     #if debug == 1
