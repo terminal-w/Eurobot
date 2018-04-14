@@ -57,6 +57,7 @@ PID Wheel1(&Input1, &Output1, &SP1, Kp, Ki, Kd, DIRECT);
 #define pi 3.1415926 //saves any errors typing
 SoftwareSerial MD25(10, 11); //Software Serial MD25 RX, TX
 #define _MD25
+
 #if debug == 1 // NOT THE SERIAL SWITCH DON'T CHANGE
     #define DEBUG Serial
 #endif
@@ -194,7 +195,7 @@ void loop() {
   kmn();
 }
 /*Functions*/
-bool prox(char dir, float lim){
+bool prox(int dir, float lim){
   const int arange = 15;
   int pin;
   float dist = 0;
@@ -236,12 +237,6 @@ long instruct(byte reg, char val){
     Encs d;
     d.both = r;
     #if debug == 1
-      DEBUG.println((long)r, HEX);
-      DEBUG.print("Serial Buffer: ");
-      for(byte i = 0; i<8; i++){
-        DEBUG.print(b[i], HEX);
-      }
-      DEBUG.println();
       DEBUG.println("d.both:");
       DEBUG.println(d.both, HEX);
       DEBUG.print("Recieved: ");
@@ -387,7 +382,7 @@ void DriveTo(int E1tar, int E2tar) {
    Input0 = E1cur; Input1 = E2cur;
    Wheel0.Compute(); Wheel1.Compute();
    E1diff = E1tar-E1cur; E2diff = E2tar-E2cur;
-   bool obs = prox(E1diff, pLimit);
+   bool obs = prox((int)E1diff+(int)E2diff, pLimit);
    if(obs){
     Wheel0.SetMode(MANUAL); Wheel1.SetMode(MANUAL);
     instruct(setS1, 0); instruct(setS2, 0);
