@@ -10,7 +10,7 @@
 #define MODE_SELECTOR       0x0F                                         // Byte to change between control MODES
 
 int Mode = 2;                                                            // MODE in which the MD25 will operate selector value 
-float WheelBaseDiameter = 16.7;                                          // Distance between the two motor driven wheels in CM
+float WheelBaseDiameter = 24.1;                                          // Distance between the two motor driven wheels in CM
 float BotCircumference = (WheelBaseDiameter*3.14159);                    // Distance travelled in one full rotation of the bot
 float Distance = 0;
 float Distance1 = 0;                                                     // Sets wheel distance 1 to 0
@@ -90,14 +90,17 @@ void StopMotor(){                                                        // Func
 }
 
 void Motion(int Speed, float Distance, char Direction, int Turn){
+  int e1; int e2; bool t = 0;
   if (Direction == 's'){                                                   //forward direction
     DualSpeed = Speed;                                                    // Sets the combined motor speed value
-    Encoder(1);                                                           // Calls a function that reads value of encoder 1
-    Encoder(2);                                                           // Calls a function that reads value of encoder 2
+    e1 = Encoder(1);                                                           // Calls a function that reads value of encoder 1
+    e2 = Encoder(2);                                                           // Calls a function that reads value of encoder 2
     Distance1 = Distance;
     Distance2 = Distance;
-    bool t = 0;
-      while (Encoder(2) <= Distance1 && Encoder(2) <= Distance2){
+    t = 0;
+      while (e2 <= Distance1 && e2 <= Distance2){
+        e1 = Encoder(1);
+        e2 = Encoder(2);
         if(!t){                                                             // If statement to check the status of the traveled distance    
             Transmit(ACCELERATION, Acceleration);                               // Sets the acceleration to register 1 (6.375s)
             Transmit(SPEED, DualSpeed); t = 1;
@@ -108,12 +111,14 @@ void Motion(int Speed, float Distance, char Direction, int Turn){
   }
   else if(Direction == 'b'){                                               //backwards direction
     DualSpeed = Speed;                                                    // Sets the combined motor speed value
-    Encoder(1);                                                           // Calls a function that reads value of encoder 1
-    Encoder(2);                                                           // Calls a function that reads value of encoder 2
+    e1 = Encoder(1);                                                           // Calls a function that reads value of encoder 1
+    e2 = Encoder(2);                                                           // Calls a function that reads value of encoder 2
     Distance1 = Distance;
     Distance2 = Distance;
-    bool t = 0;
-      while (Encoder(1) >= -Distance1 && Encoder(2) >= -Distance2){          // If statement to check the status of the traveled distance    
+    t=0;
+      while (e1 >= -Distance1 && e2 >= -Distance2){          // If statement to check the status of the traveled distance    
+       e1 = Encoder(1);
+       e2 = Encoder(2);
        if(!t){                                                             // If statement to check the status of the traveled distance    
             Transmit(ACCELERATION, Acceleration);                               // Sets the acceleration to register 1 (6.375s)
             Transmit(SPEED, DualSpeed); t=1;
@@ -124,33 +129,38 @@ void Motion(int Speed, float Distance, char Direction, int Turn){
   }
   else if(Direction == 'r'){                                               //turn right
     DualSpeed = Speed;                                                    // Sets the combined motor speed value
-    Encoder(1);                                                           // Calls a function that reads value of encoder 1
-    Encoder(2);                                                           // Calls a function that reads value of encoder 2
+    e1 = Encoder(1);                                                           // Calls a function that reads value of encoder 1
+    e2 = Encoder(2);                                                           // Calls a function that reads value of encoder 2
     Distance1 = TurnAngle[Turn];
     Distance2 = -TurnAngle[Turn];
-    bool t = 0;
-      while (Encoder(1) <= Distance1 && Encoder(2) >= -Distance2){ 
-        
-        
+    t=0;
+      while (e1 <= Distance1 &&  e2 >= -Distance2){ 
+       e1 = Encoder(1);
+       e2 = Encoder(2);        
       if(!t){                                                                      // If statement to check the status of the traveled distance    
       Transmit(ACCELERATION, Acceleration);                               // Sets the acceleration to register 1 (6.375s)
-      Transmit(TURN, DualSpeed); t=1;       }                                  // Sets a combined motor speed value    
-                                                       
+      Transmit(TURN, DualSpeed); t=1;       }                                  // Sets a combined motor speed value                                                      
     }
-    BotReset();                                                           //Resets the encoders and stops the motor    
+    BotReset();
+    return;                                                                 //Resets the encoders and stops the motor    
   }
   else(Direction == 'l');{                                                 //turn left
     DualSpeed = Speed;                                                    // Sets the combined motor speed value
-    Encoder(1);                                                           // Calls a function that reads value of encoder 1
-    Encoder(2);                                                           // Calls a function that reads value of encoder 2
+    e1 = Encoder(1);                                                           // Calls a function that reads value of encoder 1
+    e2 = Encoder(2);                                                           // Calls a function that reads value of encoder 2
     Distance1 = -TurnAngle[Turn];
     Distance2 = TurnAngle[Turn];
-      if (Encoder(1) >= -Distance1 && Encoder(2) <= Distance2){          // If statement to check the status of the traveled distance    
-      Transmit(ACCELERATION, Acceleration);                              // Sets the acceleration to register 1 (6.375s)
-      Transmit(TURN, DualSpeed);                                         // Sets a combined motor speed value    
-      return;                                                        
+      t=0;
+      while (e1 >= -Distance1 && e2 <= Distance2){          // If statement to check the status of the traveled distance    
+        e1 = Encoder(1);
+        e2 = Encoder(2);
+        if(!t){
+          Transmit(ACCELERATION, Acceleration);                              // Sets the acceleration to register 1 (6.375s)
+          Transmit(TURN, DualSpeed); t=1;                                         // Sets a combined motor speed value
+        }                                                      
     }
     BotReset();                                                          //Resets the encoders and stops the motor    
+    return;
   }
 }
 
@@ -170,12 +180,18 @@ void DistCorrection(float Dist, int EncodeNumber){
 }
 
 void loop(){                                                             //Called function to get bot moving
-  Serial.println(1);
+  /*Serial.println(1);
   Motion(160, 20, 's', 0);
   Serial.println(2);
   BotReset();
   Motion(160, 0, 'l', 90);
   Serial.println(3);
+  BotReset();
+  delay(500);
+  */
+
+  Transmit(SPEED,140);
+  delay(500);
   BotReset();
   delay(500);
   
