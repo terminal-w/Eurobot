@@ -43,9 +43,9 @@ long t0;
 float pLimit;
 static float pDef = 5;
 
-const byte fDist = 75;
+const byte fDist = 611;
 const byte fSpeed = 4;
-const byte cSpeed = 24;
+const byte cSpeed = 60;
 
 #define debug 1  //switch for Software Serial
 
@@ -70,10 +70,10 @@ const int wheel_base = 15000; //distance from axle to M&M dispenser in mm x100
                                  wpID, distance, radius, theta, action, Proximity Range
                                        (x10mm)   (x10mm) (x10deg) byte  (cm)*/ 
 const int waypoints[wps][6] ={
-                                {0,   1000,     0,      900,     0, 1023},
-                                {1,   1000,     0,      900,     0, 1023},
-                                {2,   1000,     0,      900,     0, 1023},
-                                {3,   1000,     0,      900,     0, 1023},
+                                {0,   10000,     0,      900,     0, 1023},
+                                {1,   10000,     0,      900,     0, 1023},
+                                {2,   10000,     0,      900,     0, 1023},
+                                {3,   10000,     0,      900,     0, 1023},
                                 };
 /*
  * serial control register lookup table
@@ -376,7 +376,7 @@ void DriveTo(int E1tar, int E2tar) {
    DEBUG.print(S1, DEC);
    DEBUG.println(S2, DEC);
    #endif
-    if(abs(E1diff)==0||abs(E2diff)==0) {
+    if(abs(E1diff)<12||abs(E2diff)<12) {
       happy = 1;
       notify();
       break;
