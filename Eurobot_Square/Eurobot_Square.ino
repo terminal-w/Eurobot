@@ -75,10 +75,10 @@ const int wheel_base = 15000; //distance from axle to M&M dispenser in mm x100
                                  wpID, distance, radius, theta, action
                                        (x10mm)   (x10mm) (x10deg) byte*/ 
 const int waypoints[wps][6] ={
-                                {0,   1000,     0,      900,     0, 1023},
-                                {1,   1000,     0,      900,     0, 1023},
-                                {2,   1000,     0,      900,     0, 1023},
-                                {3,   1000,     0,      900,     0, 1023},
+                                {0,   10000,     0,      900,     0, 1023},
+                                {1,   10000,     0,      900,     0, 1023},
+                                {2,   10000,     0,      900,     0, 1023},
+                                {3,   10000,     0,      900,     0, 1023},
                                 };
 /*
  * serial control register lookup table
@@ -230,10 +230,10 @@ long instruct(byte reg, char val){
     MD25.flush();
     MD25.readBytes(b, 9);
     long r = 0L;
-    r |= b[2]*16777216;
-    r |= b[3]*65536;
-    r |= b[6]*256;
-    r |= b[7];
+    r |= b[6]*16777216;
+    r |= b[7]*65536;
+    r |= b[2]*256;
+    r |= b[3];
     Encs d;
     d.both = r;
     #if debug == 1
