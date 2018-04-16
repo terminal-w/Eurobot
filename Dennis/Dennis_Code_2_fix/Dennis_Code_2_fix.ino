@@ -98,10 +98,14 @@ void Motion(int Speed, float Distance, char Direction, int Turn){
     Distance1 = Distance;
     Distance2 = Distance;
     t = 0;
+    Serial.print(e1, DEC); Serial.print(", "); Serial.println(e2, DEC);
+    Serial.print(Distance1, DEC); Serial.print(", "); Serial.println(Distance2, DEC);
       while (e2 <= Distance1 && e2 <= Distance2){
+      Serial.println("While");
         e1 = Encoder(1);
         e2 = Encoder(2);
-        if(!t){                                                             // If statement to check the status of the traveled distance    
+        if(!t){
+            Serial.println("Transmisson");                                                                // If statement to check the status of the traveled distance    
             Transmit(ACCELERATION, Acceleration);                               // Sets the acceleration to register 1 (6.375s)
             Transmit(SPEED, DualSpeed); t = 1;
         }                                                                   // Sets a combined motor speed value                                                         
@@ -179,21 +183,22 @@ void DistCorrection(float Dist, int EncodeNumber){
   }
 }
 
-void loop(){                                                             //Called function to get bot moving
-  /*Serial.println(1);
-  Motion(160, 20, 's', 0);
+void loop(){
+  Serial.println(millis());//Called function to get bot moving
+  Serial.println(1);
+  Motion(160, 1000, 's', 0);
   Serial.println(2);
   BotReset();
-  Motion(160, 0, 'l', 90);
+  Motion(160, 500, 'l', 5);
   Serial.println(3);
   BotReset();
   delay(500);
-  */
-
+  
+/*
   Transmit(SPEED,140);
   delay(500);
   BotReset();
   delay(500);
-  
+ */ 
 }
 
