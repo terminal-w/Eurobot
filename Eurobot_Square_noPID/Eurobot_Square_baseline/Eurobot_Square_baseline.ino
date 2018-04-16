@@ -43,7 +43,7 @@ long t0;
 float pLimit;
 static float pDef = 5;
 
-const byte fDist = 500;
+const byte fDist = 400;
 const byte fSpeed = 4;
 const byte cSpeed = 40;
 
@@ -54,10 +54,10 @@ SoftwareSerial MD25(10, 11); //Software Serial MD25 RX, TX
 #define _MD25
 
 #if debug == 1 // NOT THE SERIAL SWITCH DON'T CHANGE
-    #define DEBUG Serial
+#define DEBUG Serial
 #endif
 //Servo Carouselle;
-const int track = 23900; //trackwidth of robot in mm x100
+const int track = 24100; //trackwidth of robot in mm x100
 const int wheel_dia = 7500; //wheel diameter of robot in mm x100
 const int wheel_base = 15000; //distance from axle to M&M dispenser in mm x100
 //const byte sPos[6] = {20, 150, 114, 73, 40, 0}; //defines servo drive positions for M&Ms 
@@ -161,10 +161,10 @@ void loop() {
   int wp[6];
   for(int i = 0; i < wps; i++){ // for loop to work through waypoints
     for(int j=0; j<6; j++){
-     /* #if debug == 1
+      #if debug == 1
       DEBUG.print("j = ");
       DEBUG.println(j, DEC);
-      #endif*/
+      #endif
       wp[j] = waypoints[i][j];
     }
     #if debug == 1
@@ -190,12 +190,7 @@ bool prox(int dir, float lim){
   if(dir > 0){pin = A0;}
   else{pin = A1;}
   for(int i=0; i < arange; i++){
-    int a = 0;
-    while(a < 1){
-      a = analogRead(pin)/(2 * 2.54);
-      delay(5);
-    }
-    dist += a;
+    dist += analogRead(pin)/(2 * 2.54);
     delay(5);
   }
   dist /= arange;
@@ -357,101 +352,80 @@ void notify(){
   return;
 }
 void DriveTo(int E1tar, int E2tar) {
-  bool happy = 0; int E1cur; int E2cur; float E1diff; float E2diff; Encs d; int saf1; int saf2; bool fine = false; int adj1; int adj2;
-  
-  if(E1tar>0){saf1 = E1tar - enc_target(fDist);}
-  else{saf1 = E1tar + enc_target(fDist);}
-  if(E2tar>0){saf2 = E2tar - enc_target(fDist);}
-  else{saf2 = E2tar + enc_target(fDist);}
-
-  if(abs(saf1 + E1tar) < abs(E1tar)){saf1 = E1tar * 0.8;}
-  if(abs(saf2 + E2tar) < abs(E2tar)){saf2 = E2tar * 0.8;}
+  bool happy = 0; int E1cur; int E2cur; char S1; char S2; float E1diff; float E2diff; Encs d;
  #if debug == 1
-  DEBUG.println("SAFE: "); DEBUG.print(saf1, DEC); DEBUG.print(", "); DEBUG.println(saf2, DEC); 
   DEBUG.println("Etars:");
-  DEBUG.print(E1tar, DEC); DEBUG.print(", ");
+  DEBUG.print(E1tar, DEC);
+  DEBUG.print(", ");
   DEBUG.println(E2tar, DEC);
   #endif
-  bool f = false;
   while (!happy) {
     timeup();
-    byte baseline = 0; bool e = 0;
-    d.both = instruct(getEs);
-    E1cur = d.indy[0];
-    E2cur = d.indy[1];
-
-   E1diff = E1tar-E1cur; E2diff = E2tar-E2cur;
-   
-#if debug == 1
-  DEBUG.println("-----------");
-  DEBUG.println("EDIFFS:");
-  DEBUG.print(E1diff);
-  DEBUG.print(", ");
-  DEBUG.println(E2diff);
-   #endif
-   bool obs = prox((int)E1diff +(int)E2diff, pLimit); 
+     bool obs = prox((int)E1diff +(int)E2diff, pLimit);
    if(obs){
     instruct(setS1, 0); instruct(setS2, 0);
    }
-   char Output1; char Output2;
-    if(abs(E1diff)<5 || abs(E2diff)<5) {
+    float E1prog; float E2prog; byte baseline = 4; bool e = 0;
+    d.both = instruct(getEs);
+    E1cur = d.indy[0];
+    E2cur = d.indy[1];
+    E1diff = E1tar-E1cur;
+    E2diff = E2tar-E2cur;
+    E1prog = E1diff/E1tar;
+    E2prog = E2diff/E2tar;
+    S1 = 20 * E1prog;
+    S2 = 20 * E2prog;
+#if debug == 1
+  DEBUG.println("EDIFFS:");
+  DEBUG.print(E1diff);
+  DEBUG.println(E2diff);
+   DEBUG.print(S1, DEC);
+   DEBUG.println(S2, DEC);
+   #endif
+    if(abs(E1diff)<fDist) {
       happy = 1;
-      notify();
+      halt;
+    }
+    else if (E1diff < 0) {
+      S1 -= baseline;
+    }
+    else {
+      S1 += baseline;
+    }
+    if (abs(E2diff)<fDist) {
+      happy = 1;
+      halt;
       break;
     }
-   else if(fine){
-   if(abs(E1diff)<10 || abs(E2diff)<10){
-    if(E1diff > 0){Output1 = 1;}
-      else{Output1 = -1;}
-      if(E2diff > 0){Output2 = 1;}
-      else{Output2 = -1;}
-   }
-   else{
-    if(E1diff > 0){Output1 = fSpeed;}
-      else{Output1 = -fSpeed;}
-      if(E2diff > 0){Output2 = fSpeed;}
-      else{Output2 = -fSpeed;}
-     }
-   }
-   else{  
-    if(abs(saf1 - E1diff) < abs(E1tar)){
-     if(E1diff > 0){Output1 = cSpeed;}
-     else{Output1 = -cSpeed;}
-      }
-     else{
-      fine = true;
-     }
-    if(abs(saf2 - E2diff) < abs(E2tar)){
-     if(E2diff > 0){Output2 = cSpeed;}
-     else{Output2 = -cSpeed;}
-      }
-     else{
-      fine = true;
-     }
-   }
-
-     
-   if(!obs){
+    else if (E2diff < 0) {
+      S2 -= baseline;
+    }
+    else {
+      S2 += baseline;
+    }
+    if(!obs){
     if(e){
-    instruct(setS1, Output1);
-    instruct(setS2, Output2);
+    instruct(setS1, S1);
+    instruct(setS2, S2);
     }
     else{
-    instruct(setS1, Output1);
-    instruct(setS2, Output2);
+      instruct(setS2, S2);
+      instruct(setS1, S1);
     }
     e = !e;
-#if debug == 1
-    DEBUG.println("Speed Adjustment: S1, S2");
-    DEBUG.print(Output1, DEC);
-    DEBUG.println(Output2, DEC);
-#endif
-   }
+    }
    else{
 #if debug == 1
     DEBUG.println("OBSTRUCTION!");
 #endif
    }
+#if debug == 1
+    DEBUG.println("Speed Adjustment: S1, S2");
+    DEBUG.print(S1, DEC);
+    DEBUG.println(S2, DEC);
+#endif
+   }
+
   }
 #if debug ==1
   DEBUG.println("Because I'm Happy");

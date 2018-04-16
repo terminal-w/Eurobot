@@ -38,9 +38,9 @@
   int indy[2];
   long both;
 };
-const double Kp = 0.117;
+const double Kp = 0.1;
 const double Ki = 0;
-const double Kd = 0.1;
+const double Kd = 0;
 const byte wps = 4;
 double Input0, Input1, Output0, Output1, SP0, SP1;
 long t0;
