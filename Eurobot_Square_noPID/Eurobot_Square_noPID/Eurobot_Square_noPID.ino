@@ -43,7 +43,7 @@ long t0;
 float pLimit;
 static float pDef = 5;
 
-const byte fDist = 611;
+const byte fDist = 400;
 const byte fSpeed = 4;
 const byte cSpeed = 60;
 
@@ -218,10 +218,10 @@ long instruct(byte reg, char val){
     MD25.flush();
     MD25.readBytes(b, 9);
     long r = 0L;
-    r |= b[2]*16777216;
-    r |= b[3]*65536;
-    r |= b[6]*256;
-    r |= b[7];
+    r |= b[6]*16777216;
+    r |= b[7]*65536;
+    r |= b[2]*256;
+    r |= b[3];
     Encs d;
     d.both = r;
     #if debug == 1
@@ -352,6 +352,7 @@ void notify(){
 }
 void DriveTo(int E1tar, int E2tar) {
   bool happy = 0; int E1cur; int E2cur; char S1; char S2; float E1diff; float E2diff; Encs d;
+  int err = enc_target(fDist);
  #if debug ==1
   DEBUG.println("Etars:");
   DEBUG.print(E1tar, DEC); DEBUG.print(", ");
@@ -362,10 +363,10 @@ void DriveTo(int E1tar, int E2tar) {
     byte baseline = 0; bool e = 0;
     d.both = instruct(getEs);
     E1cur = d.indy[0];
-    E2cur = d.indy[1];
+    //E2cur = d.indy[1];
 
-   E1diff = E1tar-E1cur; E2diff = E2tar-E2cur;
-   bool obs = prox((int)E1diff+(int)E2diff, pLimit);
+   E1diff = E1tar-E1cur; //E2diff = E2tar-E2cur;
+   bool obs = prox((int)E1diff, pLimit);
    if(obs){
     instruct(setS1, 0); instruct(setS2, 0);
    }
@@ -376,30 +377,30 @@ void DriveTo(int E1tar, int E2tar) {
    DEBUG.print(S1, DEC);
    DEBUG.println(S2, DEC);
    #endif
+   
     if(abs(E1diff)<12||abs(E2diff)<12) {
       happy = 1;
       notify();
       break;
     }
    char Output1; char Output2; bool fine = false;
-   if(abs(E1cur) < abs(E1tar - fDist) && !fine){
+    if(abs(E1cur) < abs(E1tar - err) && !fine){
      if(E1diff > 0){Output1 = cSpeed;}
      else{Output1 = -cSpeed;}
-   }
-   else{
-    fine = true;
-    if(E1diff > 0){Output1 = fSpeed;}
-    else{Output1 = -fSpeed;}
-   }
-   if(abs(E2cur) < abs(E2tar - fDist) && !fine){
-     if(E2diff > 0){Output2 = cSpeed;}
-     else{Output1 = -cSpeed;}
-   }
-   else{
-    fine = true;
-    if(E2diff > 0){Output2 = fSpeed;}
-    else{Output2 = -fSpeed;}
-   }
+    }
+     else{
+      fine = true;
+      if(E1diff > 0){Output1 = fSpeed;}
+      else{Output1 = -fSpeed;}
+     }
+    if(E1tar == -E2tar){
+      Output1 /= 3;
+      Output2 = -Output1;
+    }
+    else{
+      Output2 = Output1;
+    }
+
    
    if(!obs){ 
     if(e){
