@@ -142,7 +142,7 @@ void loop() {
   const byte err = 15;
   const byte speee = 4;
   Encs d;
-  int dist = enc_target(10000);
+  //int dist = enc_target(10000);
   int angle = 289;
   bool done = false;
   /*
@@ -191,6 +191,7 @@ void loop() {
    instruct(reset);
   }
   */
+  /*
   instruct(reset);
   instruct(setS1, 60); instruct(setS2, 60);
   while(!done){
@@ -200,7 +201,8 @@ void loop() {
   }
     halt();
     kmn();
-
+*/
+  instruct(getEs);
 }
 /*Functions*/
 bool prox(char dir, float lim){
@@ -238,10 +240,10 @@ long instruct(byte reg, char val){
     MD25.flush();
     MD25.readBytes(b, 9);
     long r = 0L;
-    r |= b[2]*16777216;
-    r |= b[3]*65536;
-    r |= b[6]*256;
-    r |= b[7];
+    r |= b[6]*16777216;
+    r |= b[7]*65536;
+    r |= b[2]*256;
+    r |= b[3];
     Encs d;
     d.both = r;
     #if debug == 1

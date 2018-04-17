@@ -38,9 +38,9 @@
   int indy[2];
   long both;
 };
-const double Kp = 0.1;
+const double Kp = 0.05;
 const double Ki = 0;
-const double Kd = 0;
+const double Kd = 0.00;
 const byte wps = 4;
 double Input0, Input1, Output0, Output1, SP0, SP1;
 long t0;
@@ -62,7 +62,7 @@ SoftwareSerial MD25(10, 11); //Software Serial MD25 RX, TX
     #define DEBUG Serial
 #endif
 //Servo Carouselle;
-const int track = 24100; //trackwidth of robot in mm x100
+const int track = 23000; //trackwidth of robot in mm x100
 const int wheel_dia = 7500; //wheel diameter of robot in mm x100
 const int wheel_base = 15000; //distance from axle to M&M dispenser in mm x100
 //const byte sPos[6] = {20, 150, 114, 73, 40, 0}; //defines servo drive positions for M&Ms 
@@ -210,7 +210,7 @@ bool prox(int dir, float lim){
   dist /= arange;
   if(dist>lim){return 0;}
   else{return 1;}
-}
+} 
 void timeup(){
   long te = millis() - t0;
   if(te > time_limit){kmn();}
@@ -237,6 +237,10 @@ long instruct(byte reg, char val){
     Encs d;
     d.both = r;
     #if debug == 1
+    for(int i=0; i<8; i++){
+      DEBUG.print(b[i],HEX);
+    }
+      DEBUG.println();
       DEBUG.println("d.both:");
       DEBUG.println(d.both, HEX);
       DEBUG.print("Recieved: ");
@@ -394,19 +398,28 @@ void DriveTo(int E1tar, int E2tar) {
    DEBUG.print(S1, DEC);
    DEBUG.println(S2, DEC);
    #endif
-    if(abs(E1diff)<10||abs(E2diff)<10) {
-      happy = 1;
-      notify();
-      break;
+    if(E1tar == E2tar) {
+      if(abs(E1diff)<10 && abs(E2diff)<10){
+        happy = 1;
+        notify();
+        break;
+      }
+    }
+    else{
+        if(abs(E1diff)<10 || abs(E2diff)<10){
+        happy = 1;
+        notify();
+        break;
+      }
     }
    if(!obs){ 
     if(e){
-    instruct(setS1, Output0);
-    instruct(setS2, Output1);
+    instruct(setS1, round(Output0));
+    instruct(setS2, round(Output1));
     }
     else{
-    instruct(setS1, Output0);
-    instruct(setS2, Output1);
+    instruct(setS2, round(Output1));
+    instruct(setS1, round(Output0));
     }
     e = !e;
 #if debug == 1
@@ -454,7 +467,6 @@ void turn(float theta){
     #endif 
     int E2tar = enc_target((int)distance);
     int E1tar = enc_target(-(int)distance);
-    SP0 = E1tar; SP1 = E2tar;
     DriveTo(E1tar, E2tar);
     return;
 }
