@@ -57,7 +57,7 @@ SoftwareSerial MD25(10, 11); //Software Serial MD25 RX, TX
     #define DEBUG Serial
 #endif
 //Servo Carouselle;
-const int track = 23900; //trackwidth of robot in mm x100
+const int track = 24050; //trackwidth of robot in mm x100
 const int wheel_dia = 7500; //wheel diameter of robot in mm x100
 const int wheel_base = 15000; //distance from axle to M&M dispenser in mm x100
 //const byte sPos[6] = {20, 150, 114, 73, 40, 0}; //defines servo drive positions for M&Ms 
@@ -400,7 +400,7 @@ void DriveTo(int E1tar, int E2tar) {
       break;
     }
    else if(fine){
-   if(abs(E1diff)<10 || abs(E2diff)<10){
+   if(abs(E1diff)<55 || abs(E2diff)<55){
     if(E1diff > 0){Output1 = 1;}
       else{Output1 = -1;}
       if(E2diff > 0){Output2 = 1;}
@@ -429,7 +429,7 @@ void DriveTo(int E1tar, int E2tar) {
       fine = true;
      }
    }
-
+    if(E1tar == -E2tar){Output2 = -Output1;}
      
    if(!obs){
     if(e){
