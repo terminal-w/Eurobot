@@ -38,7 +38,7 @@
   long both;
 };
 
-const byte wps = 7;
+const byte wps = 2;
 long t0;
 float pLimit;
 static float pDef = 5;
@@ -71,13 +71,9 @@ const int wheel_base = 15000; //distance from axle to M&M dispenser in mm x100
                                  wpID, distance, radius, theta, action, Proximity Range
                                        (x10mm)   (x10mm) (x10deg) byte  (cm)*/
 const int waypoints[wps][6] ={
-                                {0,   10170,     0,      900,     0, 1023},
-                                {1,    -970,     0,        0,     0,    0},
-                                {2,    1170,     0,      900,     0, 1023},
-                                {3,    4500,     0,     -900,     0, 1023},
-                                {4,   13000,     0,      900,     0, 1023},
-                                {5,    4000,     0,     -900,     0, 1023},
-                                {6,    3500,     0,     -900,     0,    0}
+                                {0,   10000,     0,        0,     0, 1023},
+                                {1,  -10000,     0,        0,     0, 1023},
+
                                 };
 /*
  * serial control register lookup table
@@ -148,6 +144,7 @@ void setup(){
     #endif
     while(!go){
       go = digitalRead(4);
+      delay(100);
     }
     t0 = millis();
     #if debug == 1
@@ -195,7 +192,7 @@ bool prox(int dir, float lim){
   const int arange = 15;
   int pin;
   float dist = 0;
-  if(dir >= 0){pin = A0;}
+  if(dir > 0){pin = A0;}
   else{pin = A1;}
   for(int i=0; i < arange; i++){
     int a = 0;
