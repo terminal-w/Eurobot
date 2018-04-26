@@ -12,13 +12,13 @@
  *                - Cameron Ward
  *                - Francisco
  *                }
- *       Apdapted from Odometry Task Code         
+ *       Apdapted from Odometry Task Code
  * Author: James Wilshaw -- jrw1n15@soton.ac.uk
  * Date: 2018-02-27
  * =============================================
  * Objectives:
  * Navigate route and carry out tasks at waypoints using only encoder data as input.
- * 
+ *
  * CODE STRUCTURE
  * -Instruct: Instruction sent to the MD25 and receives information to decode it
  * -halt: Function to stop robot
@@ -61,13 +61,13 @@ SoftwareSerial MD25(10, 11); //Software Serial MD25 RX, TX
 const int track = 24050; //trackwidth of robot in mm x100
 const int wheel_dia = 7500; //wheel diameter of robot in mm x100
 const int wheel_base = 15000; //distance from axle to M&M dispenser in mm x100
-//const byte sPos[6] = {20, 150, 114, 73, 40, 0}; //defines servo drive positions for M&Ms 
+//const byte sPos[6] = {20, 150, 114, 73, 40, 0}; //defines servo drive positions for M&Ms
 
-    
-/* multi dimension array describing waypoints 
+
+/* multi dimension array describing waypoints
  *  execution order: distance and radius to waypoint -ve radius indicates acw
  *                   once waypoint achieved notify (and M&M if 1) then turn theta
- *                   -ve indicates acw before executing next waypoint. 
+ *                   -ve indicates acw before executing next waypoint.
                                  wpID, distance, radius, theta, action, Proximity Range
                                        (x10mm)   (x10mm) (x10deg) byte  (cm)*/
 const int waypoints[wps][6] ={
@@ -135,11 +135,12 @@ void setup(){
   pinMode(A1, INPUT);
     #if debug == 1
       MD25.begin(38400);
-      DEBUG.begin(115200);  
+      DEBUG.begin(115200);
     #else
       MD25.begin(38400);
     #endif
-    instruct(setMod, 1); // sets motors with 0 being stop and each independent of the other.
+    instruct(setMod, 1);
+    instruct(setAcc, 10); // sets motors with 0 being stop and each independent of the other.
     //Carouselle.write(sPos[0]);
     notify();
     bool go = 0;
@@ -266,7 +267,7 @@ long instruct(byte reg, char val){
       long r = 0;
       r |= b[0] << 24;
       r |= b[1] << 16;
-      r |= b[2] << 8;         // (0x56 shifted 8 bits left, effectively * 256) 
+      r |= b[2] << 8;         // (0x56 shifted 8 bits left, effectively * 256)
       r |= b[3];              // (0x32)
  /*     #if debug == 1
       DEBUG.print("Serial Buffer: ");
@@ -281,7 +282,7 @@ long instruct(byte reg, char val){
       DEBUG.println(" degrees");
       DEBUG.println((int)millis(), DEC);
       #endif*/
-      return r; 
+      return r;
     }
     else{
       //gets
@@ -343,10 +344,8 @@ void action(int no){
 }
 void halt(){
   //function to stop robot.
-  instruct(setAcc, 10);
   instruct(setS1);
-  instruct(setS2); 
-  instruct(setAcc, 5);
+  instruct(setS2);
   #if debug == 1
     DEBUG.println("ACHTUNG!!! Ich habe gehaltet!");
   #endif
@@ -364,7 +363,7 @@ void notify(){
 }
 void DriveTo(int E1tar, int E2tar) {
   bool happy = 0; int E1cur; int E2cur; float E1diff; float E2diff; Encs d; int saf1; int saf2; bool fine = false; int adj1; int adj2;
-  
+
   if(E1tar>0){saf1 = E1tar - fDist;}
   else{saf1 = E1tar + fDist;}
   if(E2tar>0){saf2 = E2tar - fDist;}
@@ -373,7 +372,7 @@ void DriveTo(int E1tar, int E2tar) {
   if(abs(saf1 + E1tar) < abs(E1tar)){saf1 = E1tar * 0.6;}
   if(abs(saf2 + E2tar) < abs(E2tar)){saf2 = E2tar * 0.6;}
  #if debug == 1
-  DEBUG.println("SAFE: "); DEBUG.print(saf1, DEC); DEBUG.print(", "); DEBUG.println(saf2, DEC); 
+  DEBUG.println("SAFE: "); DEBUG.print(saf1, DEC); DEBUG.print(", "); DEBUG.println(saf2, DEC);
   DEBUG.println("Etars:");
   DEBUG.print(E1tar, DEC); DEBUG.print(", ");
   DEBUG.println(E2tar, DEC);
@@ -387,7 +386,7 @@ void DriveTo(int E1tar, int E2tar) {
     E2cur = d.indy[1];
 
    E1diff = E1tar-E1cur; E2diff = E2tar-E2cur;
-   
+
 #if debug == 1
   DEBUG.println("-----------");
   DEBUG.println("EDIFFS:");
@@ -395,7 +394,7 @@ void DriveTo(int E1tar, int E2tar) {
   DEBUG.print(", ");
   DEBUG.println(E2diff);
    #endif
-   bool obs = prox((int)E1diff +(int)E2diff, pLimit); 
+   bool obs = prox((int)E1diff +(int)E2diff, pLimit);
    if(obs){
     instruct(setS1, 0); instruct(setS2, 0);
    }
@@ -419,7 +418,7 @@ void DriveTo(int E1tar, int E2tar) {
       else{Output2 = -fSpeed;}
      }
    }
-   else{  
+   else{
     if(abs(saf1 - E1diff) < abs(saf1)){
      if(E1diff > 0){Output1 = cSpeed;}
      else{Output1 = -cSpeed;}
@@ -439,7 +438,7 @@ void DriveTo(int E1tar, int E2tar) {
      #endif
    }
     if(E1tar == -E2tar){Output2 = -Output1;}
-     
+
    if(!obs){
     if(e){
     instruct(setS1, Output1);
@@ -468,7 +467,7 @@ void DriveTo(int E1tar, int E2tar) {
   return;
 }
 int enc_target(int distance){
-  
+
   /* takes the required travel distance in mm x10 an converts it to an encoder target*/
  float den = pi*wheel_dia;
  float frac = 3600/den;
@@ -483,7 +482,7 @@ int enc_target(int distance){
  return out;
 }
 void turn(float theta){
-    /* takes two arguments a target angle, theta (degrees x10), 
+    /* takes two arguments a target angle, theta (degrees x10),
     executes turn */
     float distance; //distance to be traveled per in mm
     distance = theta/36000;
@@ -492,7 +491,7 @@ void turn(float theta){
     #if debug == 1
       DEBUG.print("turn: ");
       DEBUG.println(distance);
-    #endif 
+    #endif
     int E2tar = enc_target((int)distance);
     int E1tar = enc_target(-(int)distance);
     DriveTo(E1tar, E2tar);
@@ -560,4 +559,3 @@ void target(int distance, int radius) {
   DriveTo(E1Tar, E2Tar);
   return;
 }
-
