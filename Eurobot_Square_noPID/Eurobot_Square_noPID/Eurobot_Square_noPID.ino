@@ -38,17 +38,17 @@
   long both;
 };
 
-const byte wps = 7;
+const byte wps = 8;
 long t0;
 float pLimit;
-static float pDef = 5;
+static float pDef = 7.5;
 
-const byte fDist = 650;
+const byte fDist = 500; //in encoder units
 const byte fSpeed = 4;
 const byte cSpeed = 20;
 
-#define debug 1  //switch for Software Serial
-#define colour 1 //switch for team (1 is green, 0 is orange)
+#define debug 1   //switch for Software Serial
+#define colour 0 //switch for team (1 is green, 0 is orange)
 
 #define pi 3.1415926 //saves any errors typing
 SoftwareSerial MD25(10, 11); //Software Serial MD25 RX, TX
@@ -71,8 +71,9 @@ const int wheel_base = 15000; //distance from axle to M&M dispenser in mm x100
                                  wpID, distance, radius, theta, action, Proximity Range
                                        (x10mm)   (x10mm) (x10deg) byte  (cm)*/
 const int waypoints[wps][6] ={
-                                {0,   10170,     0,      900,     0, 1023},
-                                {1,    -970,     0,        0,     0,    0},
+                                {0,   11270,     0,     -900,     0, 1023},
+                                {1,     100,     0,        0,     0,    0},
+                                {11,   -100,     0,     1800,     0, 1023},
                                 {2,    1170,     0,      900,     0, 1023},
                                 {3,    4500,     0,     -900,     0, 1023},
                                 {4,   13000,     0,      900,     0, 1023},
@@ -159,9 +160,6 @@ void setup(){
 void loop() {
   // put your main code here, to run repeatedly:
   //byte MandMstock = 5;
-  #if debug == 1
-  DEBUG.println("LOOP");
-  #endif
   int wp[6];
   for(int i = 0; i < wps; i++){ // for loop to work through waypoints
     for(int j=0; j<6; j++){
@@ -199,10 +197,10 @@ bool prox(int dir, float lim){
   else{pin = A1;}
   for(int i=0; i < arange; i++){
     int a = 0;
-    while(a < 1){
-      a = analogRead(pin)/(2 * 2.54);
+      a = analogRead(pin)/2;
+      a *= 2.54;
+      if(a < 1){a = 2;}
       delay(5);
-    }
     dist += a;
     delay(5);
   }
@@ -367,13 +365,13 @@ void notify(){
 void DriveTo(int E1tar, int E2tar) {
   bool happy = 0; int E1cur; int E2cur; float E1diff; float E2diff; Encs d; int saf1; int saf2; bool fine = false; int adj1; int adj2;
   
-  if(E1tar>0){saf1 = E1tar - enc_target(fDist);}
-  else{saf1 = E1tar + enc_target(fDist);}
-  if(E2tar>0){saf2 = E2tar - enc_target(fDist);}
-  else{saf2 = E2tar + enc_target(fDist);}
+  if(E1tar>0){saf1 = E1tar - fDist;}
+  else{saf1 = E1tar + fDist;}
+  if(E2tar>0){saf2 = E2tar - fDist;}
+  else{saf2 = E2tar + fDist;}
 
-  if(abs(saf1 + E1tar) < abs(E1tar)){saf1 = E1tar * 0.8;}
-  if(abs(saf2 + E2tar) < abs(E2tar)){saf2 = E2tar * 0.8;}
+  if(abs(saf1 + E1tar) < abs(E1tar)){saf1 = E1tar * 0.6;}
+  if(abs(saf2 + E2tar) < abs(E2tar)){saf2 = E2tar * 0.6;}
  #if debug == 1
   DEBUG.println("SAFE: "); DEBUG.print(saf1, DEC); DEBUG.print(", "); DEBUG.println(saf2, DEC); 
   DEBUG.println("Etars:");
@@ -422,20 +420,23 @@ void DriveTo(int E1tar, int E2tar) {
      }
    }
    else{  
-    if(abs(saf1 - E1diff) < abs(E1tar)){
+    if(abs(saf1 - E1diff) < abs(saf1)){
      if(E1diff > 0){Output1 = cSpeed;}
      else{Output1 = -cSpeed;}
       }
      else{
       fine = true;
      }
-    if(abs(saf2 - E2diff) < abs(E2tar)){
+    if(abs(saf2 - E2diff) < abs(saf2)){
      if(E2diff > 0){Output2 = cSpeed;}
      else{Output2 = -cSpeed;}
       }
      else{
       fine = true;
      }
+     #if debug == 1
+     DEBUG.print(abs(saf1-E1diff), DEC); DEBUG.print(", "); DEBUG.println(abs(saf2-E2diff), DEC);
+     #endif
    }
     if(E1tar == -E2tar){Output2 = -Output1;}
      
