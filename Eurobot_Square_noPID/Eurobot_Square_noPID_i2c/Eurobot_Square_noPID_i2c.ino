@@ -1,6 +1,5 @@
 #include "Arduino.h"
 #include <Wire.h>
-#include <SoftwareSerial.h>
 
 /*
  * Title: Eurobot Code
@@ -50,7 +49,7 @@ const byte cSpeed = 20;
 #define colour 0 //switch for team (1 is green, 0 is orange)
 
 #define pi 3.1415926 //saves any errors typing
-SoftwareSerial MD25(10, 11); //Software Serial MD25 RX, TX
+#define MD25 Wire //I2C MD25
 #define _MD25
 
 #if debug == 1 // NOT THE SERIAL SWITCH DON'T CHANGE
@@ -84,27 +83,16 @@ const int waypoints[wps][6] ={
  */
 enum registers:byte
   {
-    getS1   = 0x21,
-    getS2   = 0x22,
-    getE1   = 0x23,
-    getE2   = 0x24,
-    getEs   = 0x25,
-    getV    = 0x26,
-    getI1   = 0x27,
-    getI2   = 0x28,
-    getVer  = 0x29,
-    getAcc  = 0x2A,
-    getMod  = 0x2B,
-    getPow  = 0x2C,
-    setS1   = 0x31,
-    setS2   = 0x32,
-    setAcc  = 0x33,
-    setMod  = 0x34,
+    addr    = 0x58,
+    setS1   = 0x00,
+    setS2   = 0x01,
+    getEs   = 0x02,
+    getE1   = 0x04,
+    getE2   = 0x08,
+    setAcc  = 0x0E,
+    setMod  = 0x0F,
     reset   = 0x35,
-    disReg  = 0x36,
-    enReg   = 0x37,
-    disTimO = 0x38,
-    enTimO  = 0x39
+    cmd     = 0x10,
   };
 #define registers
 //Function Prototypes
@@ -133,10 +121,10 @@ void setup(){
   pinMode(A0, INPUT);
   pinMode(A1, INPUT);
     #if debug == 1
-      MD25.begin(38400);
+      MD25.begin();
       DEBUG.begin(115200);
     #else
-      MD25.begin(38400);
+      MD25.begin();
     #endif
     instruct(setMod, 1);
     instruct(setAcc, 10); // sets motors with 0 being stop and each independent of the other.
@@ -217,25 +205,21 @@ void timeup(){
   return;
 }
 long instruct(byte reg, char val){
-  if(reg == getPow){
-    #if debug == 1
-    DEBUG.println("Sorry this function doesn't support that register");
-    #endif
-    return 0;
-  }
-  MD25.write((byte)0x00);
-  MD25.write(reg);
-  if(reg == 0x25){
-    byte b[9];
-    MD25.flush();
-    MD25.readBytes(b, 9);
+  MD25.beginTransmission(addr);
+  if(reg != reset){MD25.write(reg);}
+  else{MD25.write(cmd); MD25.write(reset); MD25.endTransmission(); return 0;}
+  if(reg == getEs){
+    MD25.endTransmission();
+    MD25.requestFrom(addr, 8);
+    while(MD25.available() < 8);
+    byte b[8];
+    for(byte i=0; i<8; i++){b[i] = MD25.read();}
     long r = 0L;
     r |= b[6]*16777216;
     r |= b[7]*65536;
     r |= b[2]*256;
     r |= b[3];
-    Encs d;
-    d.both = r;/*
+/*
     #if debug == 1
       DEBUG.println("d.both:");
       DEBUG.println(d.both, HEX);
@@ -250,19 +234,13 @@ long instruct(byte reg, char val){
       #endif*/
     return r;
   }
-  if(reg > 0x34){
-    #if debug == 1
-      DEBUG.print("Register: ");
-      DEBUG.print(reg, HEX);
-      DEBUG.println(" Accessed");
-    #endif
-    return 0;
-  }
-  if(reg < 0x30){byte b[5];
-    if(reg <= 0x24 && reg >= 0x23){
+  else if(reg <= getE2 && reg >= getE1){
       //encoders
-      MD25.flush();
-      MD25.readBytes(b, 5);
+    MD25.endTransmission();
+    MD25.requestFrom(addr, 4);
+    while(MD25.available() < 4);
+    byte b[4];
+    for(byte i=0; i<4; i++){b[i] = MD25.read();}
       long r = 0;
       r |= b[0] << 24;
       r |= b[1] << 16;
@@ -283,27 +261,10 @@ long instruct(byte reg, char val){
       #endif*/
       return r;
     }
-    else{
-      //gets
-      MD25.flush();
-      MD25.readBytes(b, 2);
-/*      #if debug == 1
-      DEBUG.print("Serial Buffer: ");
-      for(byte i; i<5; i++){
-        DEBUG.print(b[i], HEX);
-      }
-      DEBUG.println();
-      DEBUG.print("Recieved: ");
-      DEBUG.print(reg, HEX);
-      DEBUG.print(" with value:");
-      DEBUG.println(b[1], DEC);
-     #endif*/
-      return b[1];
-    }
-  }
-  else if(reg <= 0x34 && reg > 0x30){
+  else if(reg <= setS2 || reg >= setAcc){
     //sets
     MD25.write(val);
+    MD25.endTransmission();
     #if debug == 1
     DEBUG.print("Set Reg ");
     DEBUG.print(reg, HEX);
