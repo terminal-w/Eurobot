@@ -1,5 +1,6 @@
 #include "Arduino.h"
 #include <Wire.h>
+#include <PID_v1.h>
 
 /*
  * Title: Eurobot Code
@@ -36,14 +37,17 @@
   long both;
 };
 
+const double Kp = 0.05;
+const double Ki = 0;
+const double Kd = 0.00;
 const byte wps = 8;
+double Input0, Input1, Output0, Output1, SP0, SP1;
 long t0;
 float pLimit;
-static float pDef = 7.5;
-
-const byte fDist = 600; //in encoder units
-const byte fSpeed = 10;
-const byte cSpeed = 60;
+static float pDef = 5;
+ 
+PID Wheel0(&Input0, &Output0, &SP0, Kp, Ki, Kd, DIRECT);
+PID Wheel1(&Input1, &Output1, &SP1, Kp, Ki, Kd, DIRECT);
 
 #define debug 1   //switch for Software Serial
 #define colour 0 //switch for team (1 is green, 0 is orange)
@@ -116,6 +120,10 @@ void target(int, int);
 void setup(){
   // put your setup code here, to run once:
   //Carouselle.attach(9)
+  Wheel0.SetMode(MANUAL);
+  Wheel1.SetMode(MANUAL);
+  Wheel0.SetOutputLimits(-128,127);
+  Wheel1.SetOutputLimits(-128,127);
   pinMode(13, OUTPUT);
   pinMode(4, INPUT);
   pinMode(A0, INPUT);
@@ -123,11 +131,14 @@ void setup(){
     #if debug == 1
       MD25.begin();
       DEBUG.begin(115200);
+      DEBUG.print(F("Kp = ")); DEBUG.println(Kp, DEC);
+      DEBUG.print(F("Ki = ")); DEBUG.println(Ki, DEC);
+      DEBUG.print(F("Kd = ")); DEBUG.println(Kd, DEC);
     #else
       MD25.begin();
     #endif
     instruct(setMod, 1); // sets motors with 0 being stop and each independent of the other.
-    instruct(setAcc, 10);
+    instruct(setAcc, 3);
     instruct(reset);
   #if debug == 1
     Encs d;
@@ -352,102 +363,63 @@ void notify(){
   return;
 }
 void DriveTo(int E1tar, int E2tar) {
-  bool happy = 0; int E1cur; int E2cur; float E1diff; float E2diff; Encs d; int saf1; int saf2; bool fine = false; int adj1; int adj2;
-
-  if(E1tar>0){saf1 = E1tar - fDist;}
-  else{saf1 = E1tar + fDist;}
-  if(E2tar>0){saf2 = E2tar - fDist;}
-  else{saf2 = E2tar + fDist;}
-
-  if(abs(saf1 + E1tar) < abs(E1tar)){saf1 = E1tar * 0.6;}
-  if(abs(saf2 + E2tar) < abs(E2tar)){saf2 = E2tar * 0.6;}
- #if debug == 1
-  DEBUG.println(F("SAFE: ")); DEBUG.print(saf1, DEC); DEBUG.print(F(", ")); DEBUG.println(saf2, DEC);
-  DEBUG.println(F("Etars:"));
-  DEBUG.print(E1tar, DEC); DEBUG.print(F(", "));
+  bool happy = 0; int E1cur; int E2cur; char S1; char S2; float E1diff; float E2diff; Encs d;
+ #if debug ==1
+  DEBUG.println("Etars:");
+  DEBUG.print(E1tar, DEC); DEBUG.print(", ");
   DEBUG.println(E2tar, DEC);
   #endif
-  bool f = false;
+  SP0 = E1tar; SP1 = E2tar;
+  Wheel0.SetMode(AUTOMATIC); Wheel1.SetMode(AUTOMATIC);
   while (!happy) {
     timeup();
     byte baseline = 0; bool e = 0;
     d.both = instruct(getEs);
     E1cur = d.indy[0];
     E2cur = d.indy[1];
-
+   Input0 = E1cur; Input1 = E2cur;
+   Wheel0.Compute(); Wheel1.Compute();
    E1diff = E1tar-E1cur; E2diff = E2tar-E2cur;
-
-#if debug == 1
-  DEBUG.println("-----------");
-  DEBUG.println("EDIFFS:");
-  DEBUG.print(E1diff);
-  DEBUG.print(", ");
-  DEBUG.println(E2diff);
-   #endif
-   bool obs = prox((int)E1diff +(int)E2diff, pLimit);
+   bool obs = prox((int)E1diff+(int)E2diff, pLimit);
    if(obs){
+    Wheel0.SetMode(MANUAL); Wheel1.SetMode(MANUAL);
     instruct(setS1, 0); instruct(setS2, 0);
    }
-   char Output1; char Output2;
-    if(abs(E1diff)<2 || abs(E2diff)<2) {
-      happy = 1;
-      notify();
-      break;
-    }
-   else if(fine){
-   if(abs(E1diff)<20 || abs(E2diff)<20){
-    if(E1diff > 0){Output1 = 1;}
-      else{Output1 = -1;}
-      if(E2diff > 0){Output2 = 1;}
-      else{Output2 = -1;}
-   }
-   else{
-    if(E1diff > 0){Output1 = fSpeed;}
-      else{Output1 = -fSpeed;}
-      if(E2diff > 0){Output2 = fSpeed;}
-      else{Output2 = -fSpeed;}
-     }
-   }
-   else{
-    if(abs(saf1 - E1diff) < abs(saf1)){
-     if(E1diff > 0){Output1 = cSpeed;}
-     else{Output1 = -cSpeed;}
-      }
-     else{
-      fine = true;
-     }
-    if(abs(saf2 - E2diff) < abs(saf2)){
-     if(E2diff > 0){Output2 = cSpeed;}
-     else{Output2 = -cSpeed;}
-      }
-     else{
-      fine = true;
-     }
-     #if debug == 1
-     DEBUG.print(abs(saf1-E1diff), DEC); DEBUG.print(", "); DEBUG.println(abs(saf2-E2diff), DEC);
-     #endif
-   }
-    if(E1tar == -E2tar){Output2 = -Output1;}
+#if debug == 1
+  DEBUG.println(F("EDIFFS:"));
+  DEBUG.print(E1diff);
+  DEBUG.println(E2diff);
+   DEBUG.print(S1, DEC);
+   DEBUG.println(S2, DEC);
+   #endif
 
-   if(!obs){
+    if(abs(E1diff)<10 || abs(E2diff)<10){
+        happy = 1;
+        notify();
+        break;
+    }
+      
+   if(!obs){ 
     if(e){
-    instruct(setS1, Output1);
-    instruct(setS2, Output2);
+    instruct(setS1, round(Output0));
+    instruct(setS2, round(Output1));
     }
     else{
-    instruct(setS1, Output1);
-    instruct(setS2, Output2);
+    instruct(setS2, round(Output1));
+    instruct(setS1, round(Output0));
     }
+    
     e = !e;
 #if debug == 1
-    DEBUG.println("Speed Adjustment: S1, S2");
-    DEBUG.print(Output1, DEC);
-    DEBUG.println(Output2, DEC);
+    DEBUG.println(F("Speed Adjustment: S1, S2"));
+    DEBUG.print(Output0, DEC);
+    DEBUG.println(Output1, DEC);
 #endif
    }
+   
    else{
 #if debug == 1
-    DEBUG.println("OBSTRUCTION!");
+    DEBUG.println(F("OBSTRUCTION!"));
 #endif
    }
   }
