@@ -12,7 +12,7 @@ double aTuneStep=50, aTuneNoise=1, aTuneStartValue=100;
 unsigned int aTuneLookBack=20;
 
 boolean tuning = false;
-unsigned long  modelTime, serialTime;
+unsigned long serialTime;
 
 
 //set to false to connect to the real world
@@ -46,7 +46,7 @@ boolean useSimulation = false;
  * -
  */
  /*Definitions*/
- const long time_limit = 100000; //time limit in milliseconds
+ const unsigned long time_limit = 100000; //time limit in milliseconds
  union Encs{
   int indy[2];
   long both;
@@ -119,14 +119,16 @@ void changeAutoTune();
 void AutoTuneHelper(bool);
 void SerialSend();
 void SerialReceive();
+/*
 void kmn(){
   #if debug == 1
   DEBUG.println("KILL ME NOW!");
   #endif
   bool a=0; while(!a){a=0;}
   } //function than never returns to provide stop
-void timeup();
+void timeup();*/
 long instruct(byte, char = 0);
+/*
 void action(int);
 void halt();
 void notify();
@@ -135,6 +137,7 @@ int enc_target(int);
 void turn(float);
 int sweep(int, int, bool = 0);
 void target(int, int);
+*/
 /*Main Code*/
 void setup(){
   // put your setup code here, to run once:
@@ -174,7 +177,7 @@ void setup(){
     DEBUG.print(d.indy[0], HEX); DEBUG.print(F(", ")); DEBUG.println(d.indy[1], HEX);
   #endif
     //Carouselle.write(sPos[0]);
-    notify();
+    //notify();
     bool go = 0;
     #if debug == 1
     DEBUG.print(F("Awaiting all clear @ "));
@@ -227,6 +230,7 @@ void loop() {
   }
 }
 /*Functions*/
+/*
 bool prox(int dir, float lim){
   const int arange = 15;
   int pin;
@@ -253,7 +257,7 @@ void timeup(){
   long te = millis() - t0;
   if(te > time_limit){kmn();}
   return;
-}
+}*/
 long instruct(byte reg, char val){
   MD25.beginTransmission(addr);
   if(reg != reset){MD25.write(reg);}
@@ -352,6 +356,7 @@ long instruct(byte reg, char val){
   #endif
   return 0;
 }
+/*
 void action(int no){
   if(no == 0){return;} //no action
   else if(no == 1){
@@ -460,11 +465,12 @@ void DriveTo(int E1tar, int E2tar) {
   DEBUG.println(F("Because I'm Happy"));
 #endif
   return;
-}
+}*/
+/*
 int enc_target(int distance){
 
   /* takes the required travel distance in mm x10 an converts it to an encoder target*/
- float den = pi*wheel_dia;
+/* float den = pi*wheel_dia;
  float frac = 3600/den;
  int out = distance * frac;
 /*
@@ -473,12 +479,12 @@ int enc_target(int distance){
     DEBUG.print("Encoder Target:");
     DEBUG.print(out, DEC);
     DEBUG.println(" degrees");
- #endif*/
+ #endif
  return out;
 }
 void turn(float theta){
     /* takes two arguments a target angle, theta (degrees x10),
-    executes turn */
+    executes turn 
     float distance; //distance to be traveled per in mm
     distance = theta/36000;
     distance *= pi;
@@ -494,7 +500,7 @@ void turn(float theta){
 }
 int sweep(int distance, int radius, bool in){
   /* code to allow robot to describe an arc
-     returns the inner & outer arc lengths in mm x10*/
+     returns the inner & outer arc lengths in mm x10
   int Ri = radius - track/20;
   int Ro = radius + track/20;
   int Di = (distance/radius)*Ri;
@@ -554,7 +560,7 @@ void target(int distance, int radius) {
   DriveTo(E1Tar, E2Tar);
   return;
 }
-
+*/
 void changeAutoTune()
 {
  if(!tuning)
@@ -599,10 +605,10 @@ void SerialSend()
 
 void SerialReceive()
 {
-  if(Serial.available())
+  if(DEBUG.available())
   {
-   char b = Serial.read(); 
-   Serial.flush(); 
+   char b = DEBUG.read(); 
+   DEBUG.flush(); 
    if((b=='1' && !tuning) || (b!='1' && tuning))changeAutoTune();
   }
 }
