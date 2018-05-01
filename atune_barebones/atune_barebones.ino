@@ -115,6 +115,10 @@ enum registers:byte
   };
 #define registers
 //Function Prototypes
+void changeAutoTune();
+void AutoTuneHelper(bool);
+void SerialSend();
+void SerialReceive();
 void kmn(){
   #if debug == 1
   DEBUG.println("KILL ME NOW!");
@@ -153,6 +157,7 @@ void setup(){
     #else
       MD25.begin();
     #endif
+    Wheel0.SetMode(AUTOMATIC);
     if(tuning)
   {
     tuning=false;
@@ -191,7 +196,7 @@ void loop() {
   Encs d;
   unsigned long now = millis();
   d.both = instruct(getEs);
-  Input0 = d.indy[0]
+  Input0 = d.indy[0];
   if(tuning)
   {
     byte val = (aTune.Runtime());
@@ -220,7 +225,6 @@ void loop() {
     SerialSend();
     serialTime+=500;
   }
-}
 }
 /*Functions*/
 bool prox(int dir, float lim){
@@ -581,15 +585,15 @@ void AutoTuneHelper(boolean start)
 
 void SerialSend()
 {
-  DEBUG.print("setpoint: ");DEBUG.print(SP0); DEBUG.print(" ");
-  DEBUG.print("input: ");DEBUG.print(Input0); DEBUG.print(" ");
-  DEBUG.print("output: ");DEBUG.print(Output0); DEBUG.print(" ");
+  DEBUG.print(F("setpoint: "));DEBUG.print(SP0); DEBUG.print(F(" "));
+  DEBUG.print(F("input: "));DEBUG.print(Input0); DEBUG.print(F(" "));
+  DEBUG.print(F("output: "));DEBUG.print(Output0); DEBUG.print(F(" "));
   if(tuning){
-    DEBUG.println("tuning mode");
+    DEBUG.println(F("tuning mode"));
   } else {
-    DEBUG.print("kp: ");DEBUG.print(myPID.GetKp());DEBUG.print(" ");
-    Serial.print("ki: ");Serial.print(myPID.GetKi());Serial.print(" ");
-    Serial.print("kd: ");Serial.print(myPID.GetKd());Serial.println();
+    DEBUG.print(F("kp: "));DEBUG.print(Wheel0.GetKp());DEBUG.print(F(" "));
+    DEBUG.print(F("ki: "));DEBUG.print(Wheel0.GetKi());DEBUG.print(F(" "));
+    DEBUG.print(F("kd: "));DEBUG.print(Wheel0.GetKd());DEBUG.println();
   }
 }
 
