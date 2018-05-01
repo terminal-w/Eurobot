@@ -1,7 +1,22 @@
 #include "Arduino.h"
 #include <Wire.h>
 #include <PID_v1.h>
+#include <PID_AutoTune_v0.h>
 
+byte ATuneModeRemember=2;
+double input=80, output=50, setpoint=180;
+
+double kpmodel=1.5, taup=100, theta[50];
+double outputStart=5;
+double aTuneStep=50, aTuneNoise=1, aTuneStartValue=100;
+unsigned int aTuneLookBack=20;
+
+boolean tuning = false;
+unsigned long  modelTime, serialTime;
+
+
+//set to false to connect to the real world
+boolean useSimulation = false;
 /*
  * Title: Eurobot Code
  * Client: Atalantis Robotics Co.{
@@ -37,9 +52,9 @@
   long both;
 };
 
-const double Kp = 0.3;
-const double Ki = 0.05;
-const double Kd = 0.1;
+double Kp = 0.3;
+double Ki = 0.05;
+double Kd = 0.1;
 const byte wps = 8;
 double Input0, Input1, Output0, Output1, SP0, SP1;
 long t0;
@@ -48,7 +63,7 @@ static float pDef = 15;
  
 PID Wheel0(&Input0, &Output0, &SP0, Kp, Ki, Kd, DIRECT);
 PID Wheel1(&Input1, &Output1, &SP1, Kp, Ki, Kd, DIRECT);
-
+PID_ATune aTune(&Input0, &Output0);
 #define debug 1   //switch for Software Serial
 #define colour 0 //switch for team (1 is green, 0 is orange)
 
@@ -130,6 +145,7 @@ void setup(){
   pinMode(A1, INPUT);
     #if debug == 1
       MD25.begin();
+      serialTime = 0;
       DEBUG.begin(115200);
       DEBUG.print(F("Kp = ")); DEBUG.println(Kp, DEC);
       DEBUG.print(F("Ki = ")); DEBUG.println(Ki, DEC);
@@ -137,6 +153,13 @@ void setup(){
     #else
       MD25.begin();
     #endif
+    if(tuning)
+  {
+    tuning=false;
+    changeAutoTune();
+    tuning=true;
+  }
+  SP0 = 180;
     instruct(setMod, 1); // sets motors with 0 being stop and each independent of the other.
     instruct(setAcc, 3);
     instruct(reset);
@@ -165,34 +188,39 @@ void setup(){
 void loop() {
   // put your main code here, to run repeatedly:
   //byte MandMstock = 5;
-  int wp[6];
-  for(int i = 0; i < wps; i++){ // for loop to work through waypoints
-    for(int j=0; j<6; j++){
-     /* #if debug == 1
-      DEBUG.print("j = ");
-      DEBUG.println(j, DEC);
-      #endif*/
-      wp[j] = waypoints[i][j];
+  Encs d;
+  unsigned long now = millis();
+  d.both = instruct(getEs);
+  Input0 = d.indy[0]
+  if(tuning)
+  {
+    byte val = (aTune.Runtime());
+    if (val!=0)
+    {
+      tuning = false;
     }
-    #if debug == 1
-    DEBUG.println(wp[0], DEC);
-    #endif
-    if(wp[5] != 1023){pLimit = wp[5];}
-    else{pLimit = pDef;}
-    target(wp[1], wp[2]);
-    #if debug == 1
-    DEBUG.print(F("Turning: "));
-    DEBUG.println(wp[3], DEC);
-    #endif
-    if(wp[5] == 1023){pLimit=pDef/2;}
-    #if colour == 1
-      turn(-wp[3]);
-    #else
-      turn(wp[3]);
-    #endif
-    action(wp[4]);
+    if(!tuning)
+    { //we're done, set the tuning parameters
+      Kp = aTune.GetKp();
+      Ki = aTune.GetKi();
+      Kd = aTune.GetKd();
+      Wheel0.SetTunings(Kp,Ki,Kd);
+      AutoTuneHelper(false);
+    }
   }
-  kmn();
+  else Wheel0.Compute();
+
+     instruct(setS1, Output0);
+     instruct(setS2, Output0);
+  
+  //send-receive with processing if it's time
+  if(millis()>serialTime)
+  {
+    SerialReceive();
+    SerialSend();
+    serialTime+=500;
+  }
+}
 }
 /*Functions*/
 bool prox(int dir, float lim){
@@ -522,3 +550,56 @@ void target(int distance, int radius) {
   DriveTo(E1Tar, E2Tar);
   return;
 }
+
+void changeAutoTune()
+{
+ if(!tuning)
+  {
+    //Set the output to the desired starting frequency.
+    output=aTuneStartValue;
+    aTune.SetNoiseBand(aTuneNoise);
+    aTune.SetOutputStep(aTuneStep);
+    aTune.SetLookbackSec((int)aTuneLookBack);
+    AutoTuneHelper(true);
+    tuning = true;
+  }
+  else
+  { //cancel autotune
+    aTune.Cancel();
+    tuning = false;
+    AutoTuneHelper(false);
+  }
+}
+
+void AutoTuneHelper(boolean start)
+{
+  if(start)
+    ATuneModeRemember = Wheel0.GetMode();
+  else
+    Wheel0.SetMode(ATuneModeRemember);
+}
+
+void SerialSend()
+{
+  DEBUG.print("setpoint: ");DEBUG.print(SP0); DEBUG.print(" ");
+  DEBUG.print("input: ");DEBUG.print(Input0); DEBUG.print(" ");
+  DEBUG.print("output: ");DEBUG.print(Output0); DEBUG.print(" ");
+  if(tuning){
+    DEBUG.println("tuning mode");
+  } else {
+    DEBUG.print("kp: ");DEBUG.print(myPID.GetKp());DEBUG.print(" ");
+    Serial.print("ki: ");Serial.print(myPID.GetKi());Serial.print(" ");
+    Serial.print("kd: ");Serial.print(myPID.GetKd());Serial.println();
+  }
+}
+
+void SerialReceive()
+{
+  if(Serial.available())
+  {
+   char b = Serial.read(); 
+   Serial.flush(); 
+   if((b=='1' && !tuning) || (b!='1' && tuning))changeAutoTune();
+  }
+}
+
