@@ -214,12 +214,13 @@ void loop() {
       Kd = aTune.GetKd();
       Wheel0.SetTunings(Kp,Ki,Kd);
       AutoTuneHelper(false);
+      instruct(reset);
     }
   }
   else Wheel0.Compute();
 
      instruct(setS1, Output0);
-     instruct(setS2, Output0);
+     instruct(setS2, -Output0);
   
   //send-receive with processing if it's time
   if(millis()>serialTime)

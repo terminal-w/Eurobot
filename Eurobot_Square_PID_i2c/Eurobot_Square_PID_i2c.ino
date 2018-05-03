@@ -37,9 +37,9 @@
   long both;
 };
 
-const double Kp = 0.3;
-const double Ki = 0.05;
-const double Kd = 0.1;
+const double Kp = 0.21;
+const double Ki = 0.0001;
+const double Kd = 0.0001;
 const byte wps = 8;
 double Input0, Input1, Output0, Output1, SP0, SP1;
 long t0;
@@ -365,25 +365,26 @@ void notify(){
 }
 void DriveTo(int E1tar, int E2tar) {
   bool happy = 0; int E1cur; int E2cur; char S1; char S2; float E1diff; float E2diff; Encs d;
- #if debug ==1
+ #if debug == 1
   DEBUG.println("Etars:");
   DEBUG.print(E1tar, DEC); DEBUG.print(", ");
   DEBUG.println(E2tar, DEC);
   #endif
   SP0 = E1tar; SP1 = E2tar;
-  Wheel0.SetMode(AUTOMATIC); Wheel1.SetMode(AUTOMATIC);
-  while (!happy) {
+  
+  while(!happy) {
     timeup();
     byte baseline = 0; bool e = 0;
     d.both = instruct(getEs);
     E1cur = d.indy[0];
     E2cur = d.indy[1];
    Input0 = E1cur; Input1 = E2cur;
-   Wheel0.Compute(); Wheel1.Compute();
    E1diff = E1tar-E1cur; E2diff = E2tar-E2cur;
    bool obs = prox((int)E1diff+(int)E2diff, pLimit);
+   SP0 = E1tar; SP1 = E2tar;
+   Wheel0.SetMode(AUTOMATIC); Wheel1.SetMode(AUTOMATIC);
    if(obs){
-    Wheel0.SetMode(MANUAL); Wheel1.SetMode(MANUAL);
+    //Wheel0.SetMode(MANUAL); Wheel1.SetMode(MANUAL);
     instruct(setS1, 0); instruct(setS2, 0);
    }
 #if debug == 1
@@ -394,13 +395,14 @@ void DriveTo(int E1tar, int E2tar) {
    DEBUG.println(S2, DEC);
    #endif
 
-    if(abs(E1diff)<2 && abs(E2diff)<2){
+    if(abs(E1diff)<5 && abs(E2diff)<5){
         happy = 1;
         notify();
         break;
     }
       
-   if(!obs){ 
+   if(!obs){
+    Wheel0.Compute(); Wheel1.Compute();
     if(e){
     instruct(setS1, round(Output0));
     instruct(setS2, round(Output1));
