@@ -102,7 +102,7 @@ enum registers:byte
 //Function Prototypes
 void kmn(){
   #if debug == 1
-  DEBUG.println("KILL ME NOW!");
+  DEBUG.println(F("KILL ME NOW!"));
   #endif
   bool a=0; while(!a){a=0;}
   } //function than never returns to provide stop
@@ -325,22 +325,27 @@ void action(int no){
   else if(no == 1){
     //Open Recuperator
     digitalWrite(5, 1);
-    delay(500);
+    digitalWrite(6, 1);
+    delay(100);
+    digitalWrite(6, 0);
+    delay(50);
     digitalWrite(5, 0);
     return;
   }
   else if(no == 2){
     //Water Treatment
-    digitalWrite(2, 1);
-    delay(500);
-    digitalWrite(2, 0);
+    digitalWrite(7, 1);
+    delay(5000);
+    digitalWrite(7, 0);
     return;
   }
     else if(no == 3){
     //Water Tower
-    digitalWrite(3, 1);
-    delay(500);
-    digitalWrite(3, 0);
+    digitalWrite(8, 1);
+    digitalWrite(7, 1);
+    delay(5000);
+    digitalWrite(7, 0);
+    digitalWrite(8, 0);
     return;
   }
 }
