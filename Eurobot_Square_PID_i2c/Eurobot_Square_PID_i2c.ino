@@ -37,14 +37,15 @@
   long both;
 };
 
-const double Kp = 0.21;
-const double Ki = 0.0001;
-const double Kd = 0.0001;
-const byte wps = 8;
+const double Kp = 0.25;
+const double Ki = 0.0002;
+const double Kd = 0.0003;
+const byte  wps = 7;
 double Input0, Input1, Output0, Output1, SP0, SP1;
 long t0;
 float pLimit;
-static float pDef = 15;
+static float pDef = 20;
+static byte toinit = 5;
  
 PID Wheel0(&Input0, &Output0, &SP0, Kp, Ki, Kd, DIRECT);
 PID Wheel1(&Input1, &Output1, &SP1, Kp, Ki, Kd, DIRECT);
@@ -60,7 +61,7 @@ PID Wheel1(&Input1, &Output1, &SP1, Kp, Ki, Kd, DIRECT);
     #define DEBUG Serial
 #endif
 //Servo Carouselle;
-const int track = 24050; //trackwidth of robot in mm x100
+const int track = 23975; //trackwidth of robot in mm x100
 const int wheel_dia = 7500; //wheel diameter of robot in mm x100
 const int wheel_base = 15000; //distance from axle to M&M dispenser in mm x100
 //const byte sPos[6] = {20, 150, 114, 73, 40, 0}; //defines servo drive positions for M&Ms
@@ -73,15 +74,14 @@ const int wheel_base = 15000; //distance from axle to M&M dispenser in mm x100
                                  wpID, distance, radius, theta, action, Proximity Range
                                        (x10mm)   (x10mm) (x10deg) byte  (cm)*/
 const int waypoints[wps][6] ={
-                                {0,   11270,     0,     -900,     0, 1023},
-                                {1,     100,     0,        0,     0,    0},
-                                {11,   -100,     0,     1800,     0, 1023},
-                                {2,    1170,     0,      900,     0, 1023},
-                                {3,    4500,     0,     -900,     0, 1023},
-                                {4,   13000,     0,      900,     0, 1023},
-                                {5,    4000,     0,     -900,     0, 1023},
-                                {6,    3500,     0,     -900,     0,    0}
-                                };
+                                 {0,    11620,      0,    -900,    0,   1023},
+                                 {1,      420,      0,       0,    0,      0},
+                                 {2,     -420,      0,    -900,    0,   1023},
+                                 {3,     5760,      0,    -900,    0,   1023},
+                                 {4,    12070,      0,     900,    0,   1023},
+                                 {5,     1100,      0,    -900,    0,     10},
+                                 {6,     3800,      0,       0,    4,      0}
+                              };
 /*
  * serial control register lookup table
  */
@@ -175,6 +175,7 @@ void loop() {
       wp[j] = waypoints[i][j];
     }
     #if debug == 1
+    DEBUG.println(F("Waypoint Notification:"));
     DEBUG.println(wp[0], DEC);
     #endif
     if(wp[5] != 1023){pLimit = wp[5];}
@@ -219,7 +220,7 @@ bool prox(int dir, float lim){
 }
 void timeup(){
   long te = millis() - t0;
-  if(te > time_limit){kmn();}
+  if(te > time_limit){halt(); kmn();}
   return;
 }
 long instruct(byte reg, char val){
@@ -348,6 +349,19 @@ void action(int no){
     digitalWrite(8, 0);
     return;
   }
+    else if(no ==4){
+      //Bee Launch
+    int theta = 900;
+    float distance; //distance to be traveled per in mm
+    distance = theta/36000;
+    distance *= pi;
+    distance *= track;
+    #if colour == 0
+    DriveTo(0, -enc_target(distance));
+    #else
+    DriveTo(-enc_target(distance), 0);
+    #endif
+    }
 }
 void halt(){
   //function to stop robot.
@@ -361,10 +375,7 @@ void halt(){
 void notify(){
   halt();
   tone(13, 4000, 500);
-  delay(500);
-  #if debug == 1
-    DEBUG.println(F("Waypoint Notification"));
-  #endif
+  delay(50);
   instruct(reset);
   return;
 }
@@ -376,21 +387,21 @@ void DriveTo(int E1tar, int E2tar) {
   DEBUG.println(E2tar, DEC);
   #endif
   SP0 = E1tar; SP1 = E2tar;
-  
+  int toh = toinit;
   while(!happy) {
     timeup();
     byte baseline = 0; bool e = 0;
     d.both = instruct(getEs);
     E1cur = d.indy[0];
     E2cur = d.indy[1];
-   Input0 = E1cur; Input1 = E2cur;
-   E1diff = E1tar-E1cur; E2diff = E2tar-E2cur;
-   bool obs = prox((int)E1diff+(int)E2diff, pLimit);
-   SP0 = E1tar; SP1 = E2tar;
-   Wheel0.SetMode(AUTOMATIC); Wheel1.SetMode(AUTOMATIC);
-   if(obs){
-    //Wheel0.SetMode(MANUAL); Wheel1.SetMode(MANUAL);
-    instruct(setS1, 0); instruct(setS2, 0);
+    Input0 = E1cur; Input1 = E2cur;
+    E1diff = E1tar-E1cur; E2diff = E2tar-E2cur;
+    bool obs = prox((int)E1diff+(int)E2diff, pLimit);
+    SP0 = E1tar; SP1 = E2tar;
+    Wheel0.SetMode(AUTOMATIC); Wheel1.SetMode(AUTOMATIC);
+    if(obs){
+      //Wheel0.SetMode(MANUAL); Wheel1.SetMode(MANUAL);
+       instruct(setS1, 0); instruct(setS2, 0);
    }
 #if debug == 1
   DEBUG.println(F("EDIFFS:"));
@@ -401,9 +412,15 @@ void DriveTo(int E1tar, int E2tar) {
    #endif
 
     if(abs(E1diff)<5 && abs(E2diff)<5){
+       toh--;
+       if(toh==0){
         happy = 1;
         notify();
         break;
+       }
+    }
+    else{
+      toh = toinit;
     }
       
    if(!obs){
