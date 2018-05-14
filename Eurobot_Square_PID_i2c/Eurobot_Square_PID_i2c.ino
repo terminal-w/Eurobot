@@ -38,8 +38,8 @@
 };
 
 const double Kp = 0.25;
-const double Ki = 0.0002;
-const double Kd = 0.0003;
+const double Ki = 0.0001;
+const double Kd = 0.0004;
 const byte  wps = 7;
 double Input0, Input1, Output0, Output1, SP0, SP1;
 long t0;
@@ -74,13 +74,13 @@ const int wheel_base = 15000; //distance from axle to M&M dispenser in mm x100
                                  wpID, distance, radius, theta, action, Proximity Range
                                        (x10mm)   (x10mm) (x10deg) byte  (cm)*/
 const int waypoints[wps][6] ={
-                                 {0,    11620,      0,    -900,    0,   1023},
+                                 {0,    10660,      0,    -900,    0,   1023},
                                  {1,      420,      0,       0,    0,      0},
-                                 {2,     -420,      0,    -900,    0,   1023},
-                                 {3,     5760,      0,    -900,    0,   1023},
-                                 {4,    12070,      0,     900,    0,   1023},
-                                 {5,     1100,      0,    -900,    0,     10},
-                                 {6,     3800,      0,       0,    4,      0}
+                                 {2,     -600,      0,    -900,    0,      6},
+                                 {3,     5960,      0,    -900,    0,   1023},
+                                 {4,    11870,      0,     900,    0,   1023},
+                                 {5,     2000,      0,    -900,    0,     10},
+                                 {6,     5500,      0,       0,    4,      0}
                               };
 /*
  * serial control register lookup table
@@ -185,7 +185,7 @@ void loop() {
     DEBUG.print(F("Turning: "));
     DEBUG.println(wp[3], DEC);
     #endif
-    if(wp[5] == 1023){pLimit=pDef/2;}
+    if(wp[5] == 1023){pLimit=0;}
     #if colour == 1
       turn(-wp[3]);
     #else
@@ -322,6 +322,9 @@ long instruct(byte reg, char val){
   return 0;
 }
 void action(int no){
+  #if debug == 1
+    DEBUG.print(F("ACTION:")); DEBUG.println(no, DEC);
+  #endif
   if(no == 0){return;} //no action
   else if(no == 1){
     //Open Recuperator
@@ -349,17 +352,21 @@ void action(int no){
     digitalWrite(8, 0);
     return;
   }
-    else if(no ==4){
+    else if(no == 4){
       //Bee Launch
-    int theta = 900;
+    float theta = 900;
     float distance; //distance to be traveled per in mm
     distance = theta/36000;
     distance *= pi;
     distance *= track;
+    int etar = enc_target(distance);
+    #if debug == 1
+    DEBUG.print(F("ETAR: ")); DEBUG.println(etar, DEC);
+    #endif
     #if colour == 0
-    DriveTo(0, -enc_target(distance));
+    DriveTo(0, -etar);
     #else
-    DriveTo(-enc_target(distance), 0);
+    DriveTo(-etar, 0);
     #endif
     }
 }
@@ -411,7 +418,7 @@ void DriveTo(int E1tar, int E2tar) {
    DEBUG.println(S2, DEC);
    #endif
 
-    if(abs(E1diff)<5 && abs(E2diff)<5){
+    if(abs(E1diff)<7 && abs(E2diff)<7){
        toh--;
        if(toh==0){
         happy = 1;
