@@ -74,12 +74,12 @@ const int wheel_base = 15000; //distance from axle to M&M dispenser in mm x100
                                  wpID, distance, radius, theta, action, Proximity Range
                                        (x10mm)   (x10mm) (x10deg) byte  (cm)*/
 const int waypoints[wps][6] ={
-                                 {0,    10660,      0,    -900,    0,   1023},
+                                 {0,    10210,      0,    -900,    0,   1023},
                                  {1,      420,      0,       0,    0,      0},
                                  {2,     -600,      0,    -900,    0,      6},
-                                 {3,     5640,      0,    -900,    0,   1023},
+                                 {3,     5840,      0,    -900,    0,   1023},
                                  {4,    11870,      0,     900,    0,   1023},
-                                 {5,     2200,      0,    -900,    0,     10},
+                                 {5,     2500,      0,    -900,    0,     10},
                                  {6,     6500,      0,       0,    4,      0}
                               };
 /*
@@ -122,8 +122,8 @@ void setup(){
   //Carouselle.attach(9)
   Wheel0.SetMode(MANUAL);
   Wheel1.SetMode(MANUAL);
-  Wheel0.SetOutputLimits(-60,60);
-  Wheel1.SetOutputLimits(-60,60);
+  Wheel0.SetOutputLimits(-80,80);
+  Wheel1.SetOutputLimits(-80,80);
   pinMode(13, OUTPUT);
   pinMode(4, INPUT);
   pinMode(A0, INPUT);
