@@ -74,7 +74,7 @@ const int wheel_base = 15000; //distance from axle to M&M dispenser in mm x100
                                  wpID, distance, radius, theta, action, Proximity Range
                                        (x10mm)   (x10mm) (x10deg) byte  (cm)*/
 const int waypoints[wps][6] ={
-                                 {0,    11160,      0,    -900,    0,   1023},
+                                 {0,    11460,      0,    -900,    0,   1023},
                                  {1,      850,      0,       0,    0,      0},
                                  {2,    -1000,      0,    -900,    0,      6},
                                  {3,     5840,      0,    -900,    0,   1023},
@@ -177,7 +177,8 @@ void loop() {
     int a = wp[1];
     if(wp[0] == 0 || wp[0] == 3){
       #if colour == 1
-        a -= 600;
+      int b = track/20;
+        a -= b;
       #endif
     }
     #if debug == 1
