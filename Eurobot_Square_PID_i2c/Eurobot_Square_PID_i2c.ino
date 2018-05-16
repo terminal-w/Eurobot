@@ -40,7 +40,7 @@
 const double Kp = 0.25;
 const double Ki = 0.0001;
 const double Kd = 0.0004;
-const byte  wps = 7;
+const byte  wps = 8;
 double Input0, Input1, Output0, Output1, SP0, SP1;
 long t0;
 float pLimit;
@@ -74,6 +74,7 @@ const int wheel_base = 15000; //distance from axle to M&M dispenser in mm x100
                                  wpID, distance, radius, theta, action, Proximity Range
                                        (x10mm)   (x10mm) (x10deg) byte  (cm)*/
 const int waypoints[wps][6] ={
+                                {-1,        0,      0,    -900,    0,   1023},
                                  {0,    11460,      0,    -900,    0,   1023},
                                  {1,      850,      0,       0,    0,      0},
                                  {2,    -1000,      0,    -900,    0,      6},
