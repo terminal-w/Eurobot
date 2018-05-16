@@ -74,9 +74,9 @@ const int wheel_base = 15000; //distance from axle to M&M dispenser in mm x100
                                  wpID, distance, radius, theta, action, Proximity Range
                                        (x10mm)   (x10mm) (x10deg) byte  (cm)*/
 const int waypoints[wps][6] ={
-                                 {0,    10660,      0,    -900,    0,   1023},
-                                 {1,      420,      0,       0,    0,      0},
-                                 {2,     -600,      0,    -900,    0,      6},
+                                 {0,    11160,      0,    -900,    0,   1023},
+                                 {1,      850,      0,       0,    0,      0},
+                                 {2,    -1000,      0,    -900,    0,      6},
                                  {3,     5840,      0,    -900,    0,   1023},
                                  {4,    11870,      0,     900,    0,   1023},
                                  {5,     2500,      0,    -900,    0,     10},
@@ -363,7 +363,7 @@ void action(int no){
     float theta = 900;
     float distance; //distance to be traveled per in mm
     distance = theta/36000;
-    distance *= pi;
+    distance *= 2 * pi;
     distance *= track;
     int etar = enc_target(distance);
     #if debug == 1
@@ -424,7 +424,7 @@ void DriveTo(int E1tar, int E2tar) {
    DEBUG.println(S2, DEC);
    #endif
 
-    if(abs(E1diff)<5 && abs(E2diff)<5){
+    if(abs(E1diff)<3 && abs(E2diff)<3){
        toh--;
        if(toh==0){
         happy = 1;
