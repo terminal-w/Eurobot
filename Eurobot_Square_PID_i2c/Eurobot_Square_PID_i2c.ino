@@ -51,7 +51,7 @@ PID Wheel0(&Input0, &Output0, &SP0, Kp, Ki, Kd, DIRECT);
 PID Wheel1(&Input1, &Output1, &SP1, Kp, Ki, Kd, DIRECT);
 
 #define debug 1   //switch for Software Serial
-#define colour 1 //switch for team (1 is green, 0 is orange)
+#define colour 0 //switch for team (1 is green, 0 is orange)
 
 #define pi 3.1415926 //saves any errors typing
 #define MD25 Wire //I2C MD25
@@ -74,7 +74,7 @@ const int wheel_base = 15000; //distance from axle to M&M dispenser in mm x100
                                  wpID, distance, radius, theta, action, Proximity Range
                                        (x10mm)   (x10mm) (x10deg) byte  (cm)*/
 const int waypoints[wps][6] ={
-                                 {0,    10210,      0,    -900,    0,   1023},
+                                 {0,    10660,      0,    -900,    0,   1023},
                                  {1,      420,      0,       0,    0,      0},
                                  {2,     -600,      0,    -900,    0,      6},
                                  {3,     5840,      0,    -900,    0,   1023},
@@ -174,13 +174,19 @@ void loop() {
       #endif*/
       wp[j] = waypoints[i][j];
     }
+    int a = wp[1];
+    if(wp[0] == 0 || wp[0] == 3){
+      #if colour == 1
+        a -= 600;
+      #endif
+    }
     #if debug == 1
     DEBUG.println(F("Waypoint Notification:"));
     DEBUG.println(wp[0], DEC);
     #endif
     if(wp[5] != 1023){pLimit = wp[5];}
     else{pLimit = pDef;}
-    target(wp[1], wp[2]);
+    target(a, wp[2]);
     #if debug == 1
     DEBUG.print(F("Turning: "));
     DEBUG.println(wp[3], DEC);
@@ -357,7 +363,7 @@ void action(int no){
     float theta = 900;
     float distance; //distance to be traveled per in mm
     distance = theta/36000;
-    distance *= 2*pi;
+    distance *= pi;
     distance *= track;
     int etar = enc_target(distance);
     #if debug == 1
