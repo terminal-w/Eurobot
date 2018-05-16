@@ -61,7 +61,7 @@ PID Wheel1(&Input1, &Output1, &SP1, Kp, Ki, Kd, DIRECT);
     #define DEBUG Serial
 #endif
 //Servo Carouselle;
-const int track = 23975; //trackwidth of robot in mm x100
+const int track = 23950; //trackwidth of robot in mm x100
 const int wheel_dia = 7500; //wheel diameter of robot in mm x100
 const int wheel_base = 15000; //distance from axle to M&M dispenser in mm x100
 //const byte sPos[6] = {20, 150, 114, 73, 40, 0}; //defines servo drive positions for M&Ms
@@ -79,8 +79,8 @@ const int waypoints[wps][6] ={
                                  {2,     -600,      0,    -900,    0,      6},
                                  {3,     5960,      0,    -900,    0,   1023},
                                  {4,    11870,      0,     900,    0,   1023},
-                                 {5,     2000,      0,    -900,    0,     10},
-                                 {6,     5500,      0,       0,    4,      0}
+                                 {5,     2300,      0,    -900,    0,     10},
+                                 {6,     6500,      0,       0,    4,      0}
                               };
 /*
  * serial control register lookup table
@@ -122,8 +122,8 @@ void setup(){
   //Carouselle.attach(9)
   Wheel0.SetMode(MANUAL);
   Wheel1.SetMode(MANUAL);
-  Wheel0.SetOutputLimits(-80,80);
-  Wheel1.SetOutputLimits(-80,80);
+  Wheel0.SetOutputLimits(-60,60);
+  Wheel1.SetOutputLimits(-60,60);
   pinMode(13, OUTPUT);
   pinMode(4, INPUT);
   pinMode(A0, INPUT);
@@ -418,7 +418,7 @@ void DriveTo(int E1tar, int E2tar) {
    DEBUG.println(S2, DEC);
    #endif
 
-    if(abs(E1diff)<7 && abs(E2diff)<7){
+    if(abs(E1diff)<5 && abs(E2diff)<5){
        toh--;
        if(toh==0){
         happy = 1;
