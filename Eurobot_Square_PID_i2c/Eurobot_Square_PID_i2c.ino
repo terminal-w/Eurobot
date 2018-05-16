@@ -51,7 +51,7 @@ PID Wheel0(&Input0, &Output0, &SP0, Kp, Ki, Kd, DIRECT);
 PID Wheel1(&Input1, &Output1, &SP1, Kp, Ki, Kd, DIRECT);
 
 #define debug 1   //switch for Software Serial
-#define colour 0 //switch for team (1 is green, 0 is orange)
+#define colour 1 //switch for team (1 is green, 0 is orange)
 
 #define pi 3.1415926 //saves any errors typing
 #define MD25 Wire //I2C MD25
@@ -424,7 +424,7 @@ void DriveTo(int E1tar, int E2tar) {
    DEBUG.println(S2, DEC);
    #endif
 
-    if(abs(E1diff)<3 && abs(E2diff)<3){
+    if(abs(E1diff)<5 && abs(E2diff)<5){
        toh--;
        if(toh==0){
         happy = 1;
