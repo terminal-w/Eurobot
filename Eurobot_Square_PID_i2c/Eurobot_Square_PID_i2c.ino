@@ -51,7 +51,7 @@ PID Wheel0(&Input0, &Output0, &SP0, Kp, Ki, Kd, DIRECT);
 PID Wheel1(&Input1, &Output1, &SP1, Kp, Ki, Kd, DIRECT);
 
 #define debug 1   //switch for Software Serial
-#define colour 0 //switch for team (1 is green, 0 is orange)
+#define colour 1 //switch for team (1 is green, 0 is orange)
 
 #define pi 3.1415926 //saves any errors typing
 #define MD25 Wire //I2C MD25
@@ -77,9 +77,9 @@ const int waypoints[wps][6] ={
                                  {0,    10660,      0,    -900,    0,   1023},
                                  {1,      420,      0,       0,    0,      0},
                                  {2,     -600,      0,    -900,    0,      6},
-                                 {3,     5960,      0,    -900,    0,   1023},
+                                 {3,     5640,      0,    -900,    0,   1023},
                                  {4,    11870,      0,     900,    0,   1023},
-                                 {5,     2300,      0,    -900,    0,     10},
+                                 {5,     2200,      0,    -900,    0,     10},
                                  {6,     6500,      0,       0,    4,      0}
                               };
 /*
@@ -357,7 +357,7 @@ void action(int no){
     float theta = 900;
     float distance; //distance to be traveled per in mm
     distance = theta/36000;
-    distance *= pi;
+    distance *= 2*pi;
     distance *= track;
     int etar = enc_target(distance);
     #if debug == 1
