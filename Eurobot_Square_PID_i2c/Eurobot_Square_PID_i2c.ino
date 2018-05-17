@@ -61,7 +61,7 @@ PID Wheel1(&Input1, &Output1, &SP1, Kp, Ki, Kd, DIRECT);
     #define DEBUG Serial
 #endif
 //Servo Carouselle;
-const int track = 23900; //trackwidth of robot in mm x100
+const int track = 23950; //trackwidth of robot in mm x100
 const int wheel_dia = 7500; //wheel diameter of robot in mm x100
 const int wheel_base = 15000; //distance from axle to M&M dispenser in mm x100
 //const byte sPos[6] = {20, 150, 114, 73, 40, 0}; //defines servo drive positions for M&Ms
