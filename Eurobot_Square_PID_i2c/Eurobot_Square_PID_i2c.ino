@@ -61,7 +61,7 @@ PID Wheel1(&Input1, &Output1, &SP1, Kp, Ki, Kd, DIRECT);
     #define DEBUG Serial
 #endif
 //Servo Carouselle;
-const int track = 23900; //trackwidth of robot in mm x100
+const int track = 23950; //trackwidth of robot in mm x100
 const int wheel_dia = 7500; //wheel diameter of robot in mm x100
 const int wheel_base = 15000; //distance from axle to M&M dispenser in mm x100
 //const byte sPos[6] = {20, 150, 114, 73, 40, 0}; //defines servo drive positions for M&Ms
@@ -419,7 +419,7 @@ void DriveTo(int E1tar, int E2tar) {
     Wheel0.SetMode(AUTOMATIC); Wheel1.SetMode(AUTOMATIC);
     if(obs){
       //Wheel0.SetMode(MANUAL); Wheel1.SetMode(MANUAL);
-       instruct(setS1, 0); instruct(setS2, 0);
+       S1 = 0; S2 = 0;
    }
 #if debug == 1
   DEBUG.println(F("EDIFFS:"));
@@ -428,7 +428,8 @@ void DriveTo(int E1tar, int E2tar) {
    DEBUG.print(S1, DEC);
    DEBUG.println(S2, DEC);
    #endif
-
+   bool adj = 0;
+  if(abs(E1diff)<15 && abs(E2diff)<15){
     if(abs(E1diff)<5 && abs(E2diff)<5){
        toh--;
        if(toh==0){
@@ -439,18 +440,28 @@ void DriveTo(int E1tar, int E2tar) {
     }
     else{
       toh = toinit;
+      if(E1diff==0){S1 = 0;}
+      else if(E1diff<0){S1 = -1;}
+      else{S1 = 1;}
+      if(E2diff==0){S2 = 0;}
+      else if(E2diff<0){S2 = -1;}
+      else{S2 = 1;}
     }
-      
-   if(!obs){
+   }
+   else{
+    if(!obs){
     Wheel0.Compute(); Wheel1.Compute();
+    S1 = Output0; S2 = Output1;
+    }
+   }
+     
     if(e){
-    instruct(setS1, round(Output0));
-    instruct(setS2, round(Output1));
+    instruct(setS1, round(S1));
+    instruct(setS2, round(S2));
     }
     else{
-    instruct(setS2, round(Output1));
-    instruct(setS1, round(Output0));
-    }
+    instruct(setS2, round(S1));
+    instruct(setS1, round(S2));
     
     e = !e;
 #if debug == 1
@@ -460,11 +471,9 @@ void DriveTo(int E1tar, int E2tar) {
 #endif
    }
    
-   else{
 #if debug == 1
-    DEBUG.println(F("OBSTRUCTION!"));
+    if(obs){DEBUG.println(F("OBSTRUCTION!"));}
 #endif
-   }
   }
 #if debug ==1
   DEBUG.println(F("Because I'm Happy"));
