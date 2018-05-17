@@ -76,7 +76,7 @@ const int wheel_base = 15000; //distance from axle to M&M dispenser in mm x100
 const int waypoints[wps][6] ={
                                 {-1,        0,      0,    /*-90*/0,    0,   1023},
                                  {0,    11460,      0,    -900,    0,   1023},
-                                 {1,      850,      0,       0,    0,      0},
+                                 {1,      700,      0,       0,    0,      0},
                                  {2,    -1000,      0,    -900,    0,      6},
                                  {3,     5840,      0,    -900,    0,   1023},
                                  {4,    12470,      0,     900,    0,     35},
@@ -377,7 +377,7 @@ void action(int no){
     turn(-800);
     #else
     DriveTo(-etar, 0);
-    turn(-800); 
+    turn(800); 
     #endif
     }
 }
