@@ -61,7 +61,7 @@ PID Wheel1(&Input1, &Output1, &SP1, Kp, Ki, Kd, DIRECT);
     #define DEBUG Serial
 #endif
 //Servo Carouselle;
-const int track = 23950; //trackwidth of robot in mm x100
+const int track = 23900; //trackwidth of robot in mm x100
 const int wheel_dia = 7500; //wheel diameter of robot in mm x100
 const int wheel_base = 15000; //distance from axle to M&M dispenser in mm x100
 //const byte sPos[6] = {20, 150, 114, 73, 40, 0}; //defines servo drive positions for M&Ms
@@ -363,7 +363,7 @@ void action(int no){
   }
     else if(no == 4){
       //Bee Launch
-    float theta = 900;
+    float theta = 100;
     float distance; //distance to be traveled per in mm
     distance = theta/36000;
     distance *= 2 * pi;
@@ -374,8 +374,10 @@ void action(int no){
     #endif
     #if colour == 0
     DriveTo(0, -etar);
+    turn(-800);
     #else
     DriveTo(-etar, 0);
+    turn(-800); 
     #endif
     }
 }
