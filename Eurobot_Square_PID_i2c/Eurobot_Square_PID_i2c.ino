@@ -40,7 +40,7 @@
 const double Kp = 0.25;
 const double Ki = 0.0001;
 const double Kd = 0.0004;
-const byte  wps = 8;
+const byte  wps = 7;
 double Input0, Input1, Output0, Output1, SP0, SP1;
 long t0;
 float pLimit;
@@ -74,12 +74,11 @@ const int wheel_base = 15000; //distance from axle to M&M dispenser in mm x100
                                  wpID, distance, radius, theta, action, Proximity Range
                                        (x10mm)   (x10mm) (x10deg) byte  (cm)*/
 const int waypoints[wps][6] ={
-                                {-1,        0,      0,    /*-90*/0,    0,   1023},
                                  {0,    11460,      0,    -900,    0,   1023},
                                  {1,      700,      0,       0,    0,      0},
                                  {2,    -1000,      0,    -900,    0,      6},
                                  {3,     5840,      0,    -900,    0,   1023},
-                                 {4,    12470,      0,     900,    0,     35},
+                                 {4,    12470,      0,     900,    0,     45},
                                  {5,     4500,      0,    -900,    0,     10},
                                  {6,     6800,      0,       0,    4,      0}
                               };
@@ -399,6 +398,8 @@ void notify(){
 }
 void DriveTo(int E1tar, int E2tar) {
   bool happy = 0; int E1cur; int E2cur; char S1; char S2; float E1diff; float E2diff; Encs d;
+  int danger = pLimit * 100;
+  danger = enc_target(danger);
  #if debug == 1
   DEBUG.println("Etars:");
   DEBUG.print(E1tar, DEC); DEBUG.print(", ");
@@ -408,6 +409,9 @@ void DriveTo(int E1tar, int E2tar) {
   int toh = toinit;
   while(!happy) {
     timeup();
+    if(danger > abs(E1diff)){
+      pLimit = pDef;
+    }
     byte baseline = 0; bool e = 0;
     d.both = instruct(getEs);
     E1cur = d.indy[0];
