@@ -74,7 +74,7 @@ const int wheel_base = 15000; //distance from axle to M&M dispenser in mm x100
                                  wpID, distance, radius, theta, action, Proximity Range
                                        (x10mm)   (x10mm) (x10deg) byte  (cm)*/
 const int waypoints[wps][6] ={
-                                {-1,        0,      0,    -900,    0,   1023},
+                                {-1,        0,      0,    /*-90*/0,    0,   1023},
                                  {0,    11460,      0,    -900,    0,   1023},
                                  {1,      850,      0,       0,    0,      0},
                                  {2,    -1000,      0,    -900,    0,      6},
