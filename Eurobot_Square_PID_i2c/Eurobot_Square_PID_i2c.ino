@@ -460,8 +460,8 @@ void DriveTo(int E1tar, int E2tar) {
     instruct(setS2, round(S2));
     }
     else{
-    instruct(setS2, round(S1));
-    instruct(setS1, round(S2));
+    instruct(setS2, round(S2));
+    instruct(setS1, round(S1));
     
     e = !e;
 #if debug == 1
