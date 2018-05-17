@@ -122,8 +122,8 @@ void setup(){
   //Carouselle.attach(9)
   Wheel0.SetMode(MANUAL);
   Wheel1.SetMode(MANUAL);
-  Wheel0.SetOutputLimits(-80,80);
-  Wheel1.SetOutputLimits(-80,80);
+  Wheel0.SetOutputLimits(-60,60);
+  Wheel1.SetOutputLimits(-60,60);
   pinMode(13, OUTPUT);
   pinMode(4, INPUT);
   pinMode(A0, INPUT);
