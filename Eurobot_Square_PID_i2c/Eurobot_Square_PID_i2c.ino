@@ -51,7 +51,7 @@ PID Wheel0(&Input0, &Output0, &SP0, Kp, Ki, Kd, DIRECT);
 PID Wheel1(&Input1, &Output1, &SP1, Kp, Ki, Kd, DIRECT);
 
 #define debug 1   //switch for Software Serial
-#define colour 0 //switch for team (1 is green, 0 is orange)
+#define colour 1 //switch for team (1 is green, 0 is orange)
 
 #define pi 3.1415926 //saves any errors typing
 #define MD25 Wire //I2C MD25
@@ -409,7 +409,7 @@ void DriveTo(int E1tar, int E2tar) {
   int toh = toinit;
   while(!happy) {
     timeup();
-    if(danger > abs(E1diff)){
+    if(danger > abs(E1diff) && pLimit > pDef){
       pLimit = pDef;
     }
     byte baseline = 0; bool e = 0;
